@@ -63,7 +63,7 @@ router.post("/", async (req, res) => {
             return;
         } else {
             // Save the project to firestore
-            await admin.firestore().collection("projects").doc(id).set({
+            admin.firestore().collection("projects").doc(id).set({
                 id: id,
                 name: name,
                 description: description,
@@ -112,11 +112,11 @@ router.put("/", (req, res) => {
         return;
     }
     try {
-        let checkPid = await admin.firestore()
-            .collection("projects").id;
-
-        if (checkPid.length != 0) {
-            await admin.firestore().collection("projects").doc(pid).update({
+        // let checkPid = await admin.firestore()
+        //     .collection("projects").id; 
+        let checkExistedProject = await admin.firestore().collection("projects").doc(pid).get();
+        if (checkExistedProject.exists) {
+            admin.firestore().collection("projects").doc(pid).update({
                 name: name,
                 description: description
             }).then(
@@ -154,11 +154,16 @@ router.delete("/", (req, res) => {
     try {
         let checkPid = await admin.firestore().collection("projects").id.toString();
         if (checkPid === pid) {
-            await admin.firestore().collection("projects").doc(pid).delete().then(
+            admin.firestore().collection("projects").doc(pid).delete().then(
                 res.status(200).send({
                     message: "Delete OK"
                 })
-            );
+            ).catch((error) => {
+                console.log("Delete error ", error);
+                res.status(400).send({
+                    message: "Bad request"
+                });
+            });
         } else {
             res.send(401).send({
                 message: "Unauthorized"
