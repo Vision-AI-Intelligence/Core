@@ -91,45 +91,112 @@ router.post("/", async (req, res) => {
 @api {PUT} /v1/projects Update the project
 */
 router.put("/", (req, res) => {
-  const { pid, name, description } = req.body;
-  // Update only name and description
+    const { pid, name, description } = req.body;
+    // Update only name and description
+    if (pid === undefined) {
+        res.status(404).send({
+            message: "Id is required"
+        });
+        return;
+    }
+    if (name === undefined) {
+        res.status(404).send({
+            message: "Name is required"
+        });
+        return;
+    }
+    if (description === undefined) {
+        res.status(404).send({
+            message: "Description is required"
+        });
+        return;
+    }
+    try {
+        let checkPid = await admin.firestore()
+            .collection("projects").id;
+
+        if (checkPid.length != 0) {
+            await admin.firestore().collection("projects").doc(pid).update({
+                name: name,
+                description: description
+            }).then(
+                res.status(200).send({
+                    message: "Update OK"
+                })
+            ).catch((err) => {
+                console.error("Somethings wrong: ", err);
+                res.status(404).send({
+                    message: "Not Found"
+                });
+            });
+        } else {
+            res.status(404).send({
+                message: "Project [" + pid + "] is not founded"
+            });
+            return;
+        }
+    } catch (error) {
+        console.log("Update failed ", error);
+    }
 });
 
 /*
 @api {DELETE} /v1/projects Delet the project
 */
 router.delete("/", (req, res) => {
-  const { pid } = req.query;
+    const { pid } = req.query;
+    if (pid === undefined) {
+        res.status(404).send({
+            message: "Id is required"
+        });
+        return;
+    }
+    try {
+        let checkPid = await admin.firestore().collection("projects").id.toString();
+        if (checkPid === pid) {
+            await admin.firestore().collection("projects").doc(pid).delete().then(
+                res.status(200).send({
+                    message: "Delete OK"
+                })
+            );
+        } else {
+            res.send(401).send({
+                message: "Unauthorized"
+            });
+        }
+    } catch (error) {
+        console.log("Delete failed ", error);
+    }
 });
 
 /*
 @api {POST} /v1/projects/invite Create the invitation
 */
 router.post("/invite", (req, res) => {
-  const { pid, to } = req.query;
-  // to: not null, the collaborator's id
+    const { pid, to } = req.query;
+    // to: not null, the collaborator's id
 });
 
 /*
 @api {DELETE} /v1/projects/invite Delete the invitation
 */
 router.delete("/invite", (req, res) => {
-  const { invitationId } = req.query;
+    const { invitationId } = req.query;
 });
 
 /*
 @api {POST} /v1/projects/invite/accept Accept the invitation
 */
 router.post("/invite/accept", (req, res) => {
-  const { invitationId } = req.query;
-  // Get the invitation data from its id
+    const { invitationId } = req.query;
+    // Get the invitation data from its id
 
-  //Remember to put the collaborator data into collaborator collection
+    //Remember to put the collaborator data into collaborator collection
 });
 
 /*
 @api {GET} /v1/projects/collaborators Get the list of collaborators
 */
-router.get("/collaborators", (req, res) => {});
+router.get("/collaborators", (req, res) => { });
 
 module.exports = router;
