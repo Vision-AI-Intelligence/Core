@@ -84,4 +84,11 @@ router.post("/invite", (req, res) => {
   // to: not null, the collaborator's id
 });
 
+/*
+@api {DELETE} /v1/projects/invite Delete the invitation
+*/
+router.delete("/invite", (req, res) => {
+  const { invitationId } = req.query;
+});
+
 module.exports = router;
