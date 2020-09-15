@@ -31,7 +31,7 @@ router.get("/", async (req, res) => {
 @api {POST} /v1/projects Create new project
  */
 router.post("/", async (req, res) => {
-    const { id, name, description, ownerId } = req.body;
+    const { id, name, description } = req.body;
 
     // name: not null
     // ownerId: not null
@@ -50,18 +50,12 @@ router.post("/", async (req, res) => {
         });
         return;
     }
-    if (ownerId === undefined) {
-        res.status(404).send({
-            message: ""
-        });
-        return;
-    }
-    let existedProjectDoc = await admin
-        .firestore()
-        .collection("projects")
-        .where("id", "==", id)
-        .get();
     try {
+        let existedProjectDoc = await admin
+            .firestore()
+            .collection("projects")
+            .where("id", "==", id)
+            .get();
         if (existedProjectDoc.docs.length != 0) {
             res.status(404).send({
                 message: "Id [" + id + "] already existed",
@@ -70,10 +64,9 @@ router.post("/", async (req, res) => {
         } else {
             // Save the project to firestore
             await admin.firestore().collection("projects").doc(id).set({
-                id: this.id,
-                name: this.name,
-                description: this.description,
-                ownerId: this.ownerId
+                id: req.user.uid,
+                name: req.user.name,
+                description: req.user.description,
             }).then(
                 res.status(201).send({
                     message: "OK",
