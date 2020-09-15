@@ -87,6 +87,49 @@ router.post("/", async (req, res) => {
 
 });
 
-router.put();
+/*
+@api {PUT} /v1/projects Update the project
+*/
+router.put("/", (req, res) => {
+  const { pid, name, description } = req.body;
+  // Update only name and description
+});
+
+/*
+@api {DELETE} /v1/projects Delet the project
+*/
+router.delete("/", (req, res) => {
+  const { pid } = req.query;
+});
+
+/*
+@api {POST} /v1/projects/invite Create the invitation
+*/
+router.post("/invite", (req, res) => {
+  const { pid, to } = req.query;
+  // to: not null, the collaborator's id
+});
+
+/*
+@api {DELETE} /v1/projects/invite Delete the invitation
+*/
+router.delete("/invite", (req, res) => {
+  const { invitationId } = req.query;
+});
+
+/*
+@api {POST} /v1/projects/invite/accept Accept the invitation
+*/
+router.post("/invite/accept", (req, res) => {
+  const { invitationId } = req.query;
+  // Get the invitation data from its id
+
+  //Remember to put the collaborator data into collaborator collection
+});
+
+/*
+@api {GET} /v1/projects/collaborators Get the list of collaborators
+*/
+router.get("/collaborators", (req, res) => {});
 
 module.exports = router;
