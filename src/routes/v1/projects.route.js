@@ -10,55 +10,87 @@ router.use(authorization);
 @apiVersion  1.0.0
 */
 router.get("/", async (req, res) => {
-  try {
-    let projectDoc = await admin
-      .firestore()
-      .collection("projects")
-      .where("ownerId", "==", req.user.uid)
-      .get();
-    let projects = projectDoc.docs.map((doc) => doc.data());
-    res.status(200).send({
-      projects: projects,
-    });
-  } catch (e) {
-    res.status(500).send({
-      ...e,
-    });
-  }
+    try {
+        let projectDoc = await admin
+            .firestore()
+            .collection("projects")
+            .where("ownerId", "==", req.user.uid)
+            .get();
+        let projects = projectDoc.docs.map((doc) => doc.data());
+        res.status(200).send({
+            projects: projects,
+        });
+    } catch (e) {
+        res.status(500).send({
+            ...e,
+        });
+    }
 });
 
 /*
 @api {POST} /v1/projects Create new project
  */
 router.post("/", async (req, res) => {
-  const { id, name, description, ownerId } = req.body;
+    const { id, name, description, ownerId } = req.body;
 
-  // name: not null
-  // ownerId: not null
+    // name: not null
+    // ownerId: not null
 
-  // Check the id
-  // id: not null, unique, human-friendly
-  if (id === undefined) {
-    res.status(404).send({
-      message: "Id is required",
-    });
-    return;
-  }
-  if (name === undefined) {
-  }
-  let existedProjectDoc = await admin
-    .firestore()
-    .collection("projects")
-    .where("id", "==", id)
-    .get();
-  if (existedProjectDoc.docs.length != 0) {
-    res.status(404).send({
-      message: "Id [" + id + "] already existed",
-    });
-    return;
-  }
+    // Check the id
+    // id: not null, unique, human-friendly
+    if (id === undefined) {
+        res.status(404).send({
+            message: "Id is required",
+        });
+        return;
+    }
+    if (name === undefined) {
+        res.status(404).send({
+            message: "Name is required"
+        });
+        return;
+    }
+    if (ownerId === undefined) {
+        res.status(404).send({
+            message: ""
+        });
+        return;
+    }
+    let existedProjectDoc = await admin
+        .firestore()
+        .collection("projects")
+        .where("id", "==", id)
+        .get();
+    try {
+        if (existedProjectDoc.docs.length != 0) {
+            res.status(404).send({
+                message: "Id [" + id + "] already existed",
+            });
+            return;
+        } else {
+            // Save the project to firestore
+            await admin.firestore().collection("projects").doc(id).set({
+                id: this.id,
+                name: this.name,
+                description: this.description,
+                ownerId: this.ownerId
+            }).then(
+                res.status(201).send({
+                    message: "OK",
+                })
+            ).catch((err) => {
+                console.error("Hello, somethings wrong here: ", err);
+                res.status(400).send({
+                    message: "Bad request"
+                });
+            });
+        }
+    } catch (error) {
+        console.log("create wrong ", error);
+    }
 
-  // Save the project to firestore
+
+
 });
 
 router.put();
