@@ -61,6 +61,27 @@ router.post("/", async (req, res) => {
   // Save the project to firestore
 });
 
-router.put();
+/*
+@api {PUT} /v1/projects Update the project
+*/
+router.put("/", (req, res) => {
+  const { pid, name, description } = req.body;
+  // Update only name and description
+});
+
+/*
+@api {DELETE} /v1/projects Delet the project
+*/
+router.delete("/", (req, res) => {
+  const { pid } = req.query;
+});
+
+/*
+@api {POST} /v1/projects/invite Create the invitation
+*/
+router.post("/invite", (req, res) => {
+  const { pid, to } = req.query;
+  // to: not null, the collaborator's id
+});
 
 module.exports = router;
