@@ -64,9 +64,10 @@ router.post("/", async (req, res) => {
         } else {
             // Save the project to firestore
             await admin.firestore().collection("projects").doc(id).set({
-                id: req.user.uid,
-                name: req.user.name,
-                description: req.user.description,
+                id: id,
+                name: name,
+                description: description,
+                ownerId: req.user.uid
             }).then(
                 res.status(201).send({
                     message: "OK",
