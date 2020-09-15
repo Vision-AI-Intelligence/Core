@@ -98,12 +98,17 @@ router.post("/invite/accept", (req, res) => {
   const { invitationId } = req.query;
   // Get the invitation data from its id
 
-  //Remember to put the collaborator data into collaborator collection
+  // Remember to put the collaborator data into collaborator collection
 });
 
 /*
 @api {GET} /v1/projects/collaborators Get the list of collaborators
 */
 router.get("/collaborators", (req, res) => {});
+
+/*
+@api {DELETE} /v1/projects/collaborators Remove a collaborator
+*/
+router.delete("/collaborators", (req, res) => {});
 
 module.exports = router;
