@@ -14,6 +14,7 @@ const authorization = async function (req, res, next) {
     if (config.bypass) {
       req.user = { ...dummy };
       next();
+      return;
     } else {
       res.status(401).send({
         message: "Unauthorized",
