@@ -179,7 +179,22 @@ router.delete("/", (req, res) => {
 */
 router.post("/invite", (req, res) => {
     const { pid, to } = req.query;
-    // to: not null, the collaborator's id
+    // to: not null, the collaborator's id'
+    // if(pid === undefined || to === undefined){
+    //     res.status(404).send({
+    //         message: " is required"
+    //     });
+    // }
+    pid === undefined || to === undefined ? res.status(404).send({
+        message: "Id is required"
+    }) : res.status(404).send({
+        message: "Collaboration's id is required"
+    })
+    try {
+
+    } catch (err) {
+        console.log(err);
+    }
 });
 
 /*
