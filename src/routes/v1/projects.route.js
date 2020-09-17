@@ -169,8 +169,8 @@ router.delete("/", (req, res) => {
     // }
     try {
         if (DataValidation.allNotUndefined(pid)) {
-            let checkPid = admin.firestore().collection("projects").id.toString();
-            if (checkPid === pid) {
+            let checkPid = await admin.firestore().collection("projects").doc(pid).get();
+            if (checkPid.exists) {
                 admin.firestore().collection("projects").doc(pid).delete().then(
                     res.status(statusCode.OK).send({
                         message: "Delete OK"
@@ -182,8 +182,8 @@ router.delete("/", (req, res) => {
                     });
                 });
             } else {
-                res.send(statusCode.Unauthorized).send({
-                    message: "Unauthorized"
+                res.send(statusCode.NotFound).send({
+                    message: "[" + pid + "] Not Found"
                 });
             }
         } else {
@@ -205,7 +205,7 @@ router.delete("/", (req, res) => {
 @api {POST} /v1/projects/invite Create the invitation
 */
 router.post("/invite", (req, res) => {
-    const { pid, to } = req.query;
+    const { pid, from, to } = req.query;
     // to: not null, the collaborator's id'
     // if(pid === undefined || to === undefined){
     //     res.status(404).send({
@@ -218,13 +218,27 @@ router.post("/invite", (req, res) => {
     //     message: "Collaboration's id is required"
     // })
     try {
-        if (DataValidation.allNotUndefined(pid, to)) {
-
+        if (DataValidation.allNotUndefined(pid, from, to)) {
+            const message = {
+                from: from,
+                to: to,
+                time: Date.now().toString(),
+                project: pid
+            }
+            await admin.firestore().collection("projects").doc(pid).collection("invitation").doc().create(message);
+            // send invitation to collaborator
+            await admin.firestore().collection("users").doc(to).collection("invitation").doc().create(message);
         } else {
-
+            res.status(statusCode.NotFound).send({
+                message: "Not Found"
+            });
+            return;
         }
     } catch (err) {
-        console.log(err);
+        res.status(statusCode.InternalServerError).send({
+            ...err
+        });
+        console.log("POST -> invite: ", err);
     }
 });
 
@@ -232,17 +246,58 @@ router.post("/invite", (req, res) => {
 @api {DELETE} /v1/projects/invite Delete the invitation
 */
 router.delete("/invite", (req, res) => {
-    const { invitationId } = req.query;
+    const { pid, invitationId } = req.query;
+    try {
+        if (DataValidation.allNotUndefined(invitationId)) {
+            await admin.firestore().collection("projects").doc(pid).collection("invitation").doc(invitationId).delete();
+            res.status(statusCode.OK).send({
+                message: "OK"
+            });
+        } else {
+            res.status(statusCode.NotFound).send({
+                message: "Not Found"
+            });
+            return;
+        }
+    } catch (error) {
+        res.status(statusCode.InternalServerError).send({
+            ...error
+        });
+        console.log("DELETE -> invitation: ", error);
+    }
 });
 
 /*
 @api {POST} /v1/projects/invite/accept Accept the invitation
 */
 router.post("/invite/accept", (req, res) => {
-    const { invitationId } = req.query;
+    const { pid, invitationId } = req.query;
     // Get the invitation data from its id
 
     // Remember to put the collaborator data into collaborator collection
+
+    try {
+        if (DataValidation.allNotUndefined(invitationId)) {
+            let getInvitation = await admin.firestore().collection("projects").doc(pid).collection("invitation").doc(invitationId).get();
+            if (getInvitation.exists) {
+                await admin.firestore().collection("projects").doc(pid).collection("invitaion").doc(invitationId).delete();
+                // how to update collaborator's uid
+                res.status(statusCode.OK).send({
+                    message: "OK"
+                });
+            }
+        } else {
+            res.status(statusCode.NotFound).send({
+                message: "Not Found"
+            });
+            return;
+        }
+    } catch (error) {
+        res.status(statusCode.InternalServerError).send({
+            ...error
+        });
+        console.log("POST -> invitation/accept: ", error);
+    }
 });
 
 /*
