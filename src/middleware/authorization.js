@@ -1,12 +1,12 @@
 const admin = require("firebase-admin");
 const config = require("../config");
-
+const statusCode = require("../misc/StatusCode");
 const authorization = async function (req, res, next) {
   const { authorization } = req.headers;
   const { dummy } = req.body;
   if (authorization === undefined) {
     if (dummy === undefined) {
-      res.status(401).send({
+      res.status(statusCode.Unauthorized).send({
         message: "Unauthorized",
       });
       return;
@@ -16,7 +16,7 @@ const authorization = async function (req, res, next) {
       next();
       return;
     } else {
-      res.status(401).send({
+      res.status(statusCode.Unauthorized).send({
         message: "Unauthorized",
       });
       return;
@@ -27,7 +27,7 @@ const authorization = async function (req, res, next) {
     req.user = decodedId;
     next();
   } catch (e) {
-    res.status(401).send({
+    res.status(statusCode.Unauthorized).send({
       message: "Invalid token",
     });
     return;
