@@ -1,31 +1,31 @@
 {
   "stats": {
-    "suites": 0,
-    "tests": 0,
-    "passes": 0,
+    "suites": 2,
+    "tests": 3,
+    "passes": 3,
     "pending": 0,
     "failures": 0,
-    "start": "2020-09-17T05:14:25.803Z",
-    "end": "2020-09-17T05:14:25.814Z",
-    "duration": 11,
+    "start": "2020-09-17T05:33:08.154Z",
+    "end": "2020-09-17T05:33:09.257Z",
+    "duration": 1103,
     "testsRegistered": 3,
-    "passPercent": 0,
+    "passPercent": 100,
     "pendingPercent": 0,
-    "other": 1,
-    "hasOther": true,
-    "skipped": 3,
-    "hasSkipped": true
+    "other": 0,
+    "hasOther": false,
+    "skipped": 0,
+    "hasSkipped": false
   },
   "results": [
     {
-      "uuid": "bcefd74f-a441-41b6-a2e3-7d3eb105a346",
+      "uuid": "aaa14d49-5d77-4498-87bc-ac2c00a41d2c",
       "title": "",
       "fullFile": "",
       "file": "",
       "beforeHooks": [
         {
-          "title": "\"before all\" hook",
-          "fullTitle": "\"before all\" hook",
+          "title": "\"before all\" hook in \"{root}\"",
+          "fullTitle": "\"before all\" hook in \"{root}\"",
           "timedOut": false,
           "duration": 0,
           "state": null,
@@ -36,8 +36,8 @@
           "context": null,
           "code": "config.bypass = true;",
           "err": {},
-          "uuid": "b70c833b-fa80-421d-bec3-165cd05ab3eb",
-          "parentUUID": null,
+          "uuid": "eca95cdf-6320-45f1-94e4-2e33cb2bc65c",
+          "parentUUID": "aaa14d49-5d77-4498-87bc-ac2c00a41d2c",
           "isHook": true,
           "skipped": false
         }
@@ -46,9 +46,9 @@
       "tests": [],
       "suites": [
         {
-          "uuid": "1fac0bfa-be63-4b40-ace7-8df5ac83c8d4",
+          "uuid": "bb7dbf45-0217-4c2e-9352-a546f2c24af8",
           "title": "Test Data Validation",
-          "fullFile": "D:\\Lab_Itss\\FinalGraduation\\VICbackend\\test\\misc\\DataValidation.test.js",
+          "fullFile": "D:\\Repos\\VideoIntelligence\\Core\\test\\misc\\DataValidation.test.js",
           "file": "\\test\\misc\\DataValidation.test.js",
           "beforeHooks": [],
           "afterHooks": [],
@@ -57,63 +57,63 @@
               "title": "Should return true",
               "fullTitle": "Test Data Validation Should return true",
               "timedOut": false,
-              "duration": 0,
-              "state": null,
-              "speed": null,
-              "pass": false,
+              "duration": 1,
+              "state": "passed",
+              "speed": "fast",
+              "pass": true,
               "fail": false,
               "pending": false,
               "context": null,
               "code": "let obj = {\n  a: 1,\n  b: 3.14,\n  c: \"Hello World\",\n};\nassert.equal(DataValidation.allNotUndefined(obj.a, obj.b, obj.c), true);",
               "err": {},
-              "uuid": "6c232186-ec53-4f22-a0dc-5c8e8a708ae9",
-              "parentUUID": null,
+              "uuid": "772d3a23-040f-49ab-99bd-5e23b6f4cacc",
+              "parentUUID": "bb7dbf45-0217-4c2e-9352-a546f2c24af8",
               "isHook": false,
-              "skipped": true
+              "skipped": false
             },
             {
               "title": "Should return false",
               "fullTitle": "Test Data Validation Should return false",
               "timedOut": false,
               "duration": 0,
-              "state": null,
-              "speed": null,
-              "pass": false,
+              "state": "passed",
+              "speed": "fast",
+              "pass": true,
               "fail": false,
               "pending": false,
               "context": null,
               "code": "let obj = {\n  a: 1,\n  b: 3.14,\n  c: \"Hello World\",\n};\nassert.equal(\n  DataValidation.allNotUndefined(obj.a, obj.b, obj.c, obj.d),\n  false\n);",
               "err": {},
-              "uuid": "d2b92f07-bcf9-46e0-911a-9a7456bd299c",
-              "parentUUID": null,
+              "uuid": "d5d708fc-67d6-49e0-b183-e70a518133c4",
+              "parentUUID": "bb7dbf45-0217-4c2e-9352-a546f2c24af8",
               "isHook": false,
-              "skipped": true
+              "skipped": false
             }
           ],
           "suites": [],
-          "passes": [],
+          "passes": [
+            "772d3a23-040f-49ab-99bd-5e23b6f4cacc",
+            "d5d708fc-67d6-49e0-b183-e70a518133c4"
+          ],
           "failures": [],
           "pending": [],
-          "skipped": [
-            "6c232186-ec53-4f22-a0dc-5c8e8a708ae9",
-            "d2b92f07-bcf9-46e0-911a-9a7456bd299c"
-          ],
-          "duration": 0,
+          "skipped": [],
+          "duration": 1,
           "root": false,
           "rootEmpty": false,
           "_timeout": 2000
         },
         {
-          "uuid": "f5d1be1c-e961-4c99-99ae-b6db5532b8bf",
+          "uuid": "6a731c8c-475d-44a9-8497-a2a4a158bf5e",
           "title": "v1/projects",
-          "fullFile": "D:\\Lab_Itss\\FinalGraduation\\VICbackend\\test\\v1\\projects.route.test.js",
+          "fullFile": "D:\\Repos\\VideoIntelligence\\Core\\test\\v1\\projects.route.test.js",
           "file": "\\test\\v1\\projects.route.test.js",
           "beforeHooks": [
             {
-              "title": "\"before each\" hook",
-              "fullTitle": "v1/projects \"before each\" hook",
+              "title": "\"before each\" hook in \"v1/projects\"",
+              "fullTitle": "v1/projects \"before each\" hook in \"v1/projects\"",
               "timedOut": false,
-              "duration": 0,
+              "duration": 883,
               "state": null,
               "speed": null,
               "pass": false,
@@ -122,18 +122,18 @@
               "context": null,
               "code": "// Create dummy project\nawait admin.firestore().collection(\"projects\").doc(\"dummy-0001\").set({\n  name: \"Dummy project\",\n  description: \"This is the description\",\n  ownerId: \"12345\",\n});\nconsole.log(\"Created dummy project\");",
               "err": {},
-              "uuid": "ed58039e-5bdd-4479-a952-343f272c972f",
-              "parentUUID": null,
+              "uuid": "dca1b00c-f8bd-45f7-8882-85f991fecda7",
+              "parentUUID": "6a731c8c-475d-44a9-8497-a2a4a158bf5e",
               "isHook": true,
               "skipped": false
             }
           ],
           "afterHooks": [
             {
-              "title": "\"after each\" hook",
-              "fullTitle": "v1/projects \"after each\" hook",
+              "title": "\"after each\" hook in \"v1/projects\"",
+              "fullTitle": "v1/projects \"after each\" hook in \"v1/projects\"",
               "timedOut": false,
-              "duration": 0,
+              "duration": 192,
               "state": null,
               "speed": null,
               "pass": false,
@@ -142,8 +142,8 @@
               "context": null,
               "code": "// Delete dummy project\nawait admin.firestore().collection(\"projects\").doc(\"dummy-0001\").delete();\nconsole.log(\"Deleted dummy project\");",
               "err": {},
-              "uuid": "accabb0c-345c-4b86-b17c-6a92e3fcc21c",
-              "parentUUID": null,
+              "uuid": "173ec231-0bcb-4316-a198-5b4afa98a04f",
+              "parentUUID": "6a731c8c-475d-44a9-8497-a2a4a158bf5e",
               "isHook": true,
               "skipped": false
             }
@@ -153,29 +153,29 @@
               "title": "GET",
               "fullTitle": "v1/projects GET",
               "timedOut": false,
-              "duration": 0,
-              "state": null,
-              "speed": null,
-              "pass": false,
+              "duration": 6,
+              "state": "passed",
+              "speed": "fast",
+              "pass": true,
               "fail": false,
               "pending": false,
               "context": null,
               "code": "chai\n  .request(server)\n  .get(\"/v1/projects\")\n  .set(\"content-type\", \"application/json\")\n  .send({\n    dummy: {\n      uid: \"12345\",\n      email: \"Nguyen Van Teo\",\n    },\n  })\n  .end((err, res) => {\n    const { projects } = res.body;\n    res.should.has.status(200);\n    assert.equal(projects.length, 1);\n    console.log(projects);\n  });",
               "err": {},
-              "uuid": "83b169d3-52b4-4014-a0f4-b985bebf004a",
-              "parentUUID": null,
+              "uuid": "cb485cb0-0fab-4d2c-a0dc-103daeb3bc23",
+              "parentUUID": "6a731c8c-475d-44a9-8497-a2a4a158bf5e",
               "isHook": false,
-              "skipped": true
+              "skipped": false
             }
           ],
           "suites": [],
-          "passes": [],
+          "passes": [
+            "cb485cb0-0fab-4d2c-a0dc-103daeb3bc23"
+          ],
           "failures": [],
           "pending": [],
-          "skipped": [
-            "83b169d3-52b4-4014-a0f4-b985bebf004a"
-          ],
-          "duration": 0,
+          "skipped": [],
+          "duration": 6,
           "root": false,
           "rootEmpty": false,
           "_timeout": 2000
