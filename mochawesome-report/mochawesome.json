@@ -1,0 +1,215 @@
+{
+  "stats": {
+    "suites": 2,
+    "tests": 3,
+    "passes": 3,
+    "pending": 0,
+    "failures": 0,
+    "start": "2020-09-17T05:33:08.154Z",
+    "end": "2020-09-17T05:33:09.257Z",
+    "duration": 1103,
+    "testsRegistered": 3,
+    "passPercent": 100,
+    "pendingPercent": 0,
+    "other": 0,
+    "hasOther": false,
+    "skipped": 0,
+    "hasSkipped": false
+  },
+  "results": [
+    {
+      "uuid": "aaa14d49-5d77-4498-87bc-ac2c00a41d2c",
+      "title": "",
+      "fullFile": "",
+      "file": "",
+      "beforeHooks": [
+        {
+          "title": "\"before all\" hook in \"{root}\"",
+          "fullTitle": "\"before all\" hook in \"{root}\"",
+          "timedOut": false,
+          "duration": 0,
+          "state": null,
+          "speed": null,
+          "pass": false,
+          "fail": false,
+          "pending": false,
+          "context": null,
+          "code": "config.bypass = true;",
+          "err": {},
+          "uuid": "eca95cdf-6320-45f1-94e4-2e33cb2bc65c",
+          "parentUUID": "aaa14d49-5d77-4498-87bc-ac2c00a41d2c",
+          "isHook": true,
+          "skipped": false
+        }
+      ],
+      "afterHooks": [],
+      "tests": [],
+      "suites": [
+        {
+          "uuid": "bb7dbf45-0217-4c2e-9352-a546f2c24af8",
+          "title": "Test Data Validation",
+          "fullFile": "D:\\Repos\\VideoIntelligence\\Core\\test\\misc\\DataValidation.test.js",
+          "file": "\\test\\misc\\DataValidation.test.js",
+          "beforeHooks": [],
+          "afterHooks": [],
+          "tests": [
+            {
+              "title": "Should return true",
+              "fullTitle": "Test Data Validation Should return true",
+              "timedOut": false,
+              "duration": 1,
+              "state": "passed",
+              "speed": "fast",
+              "pass": true,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "let obj = {\n  a: 1,\n  b: 3.14,\n  c: \"Hello World\",\n};\nassert.equal(DataValidation.allNotUndefined(obj.a, obj.b, obj.c), true);",
+              "err": {},
+              "uuid": "772d3a23-040f-49ab-99bd-5e23b6f4cacc",
+              "parentUUID": "bb7dbf45-0217-4c2e-9352-a546f2c24af8",
+              "isHook": false,
+              "skipped": false
+            },
+            {
+              "title": "Should return false",
+              "fullTitle": "Test Data Validation Should return false",
+              "timedOut": false,
+              "duration": 0,
+              "state": "passed",
+              "speed": "fast",
+              "pass": true,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "let obj = {\n  a: 1,\n  b: 3.14,\n  c: \"Hello World\",\n};\nassert.equal(\n  DataValidation.allNotUndefined(obj.a, obj.b, obj.c, obj.d),\n  false\n);",
+              "err": {},
+              "uuid": "d5d708fc-67d6-49e0-b183-e70a518133c4",
+              "parentUUID": "bb7dbf45-0217-4c2e-9352-a546f2c24af8",
+              "isHook": false,
+              "skipped": false
+            }
+          ],
+          "suites": [],
+          "passes": [
+            "772d3a23-040f-49ab-99bd-5e23b6f4cacc",
+            "d5d708fc-67d6-49e0-b183-e70a518133c4"
+          ],
+          "failures": [],
+          "pending": [],
+          "skipped": [],
+          "duration": 1,
+          "root": false,
+          "rootEmpty": false,
+          "_timeout": 2000
+        },
+        {
+          "uuid": "6a731c8c-475d-44a9-8497-a2a4a158bf5e",
+          "title": "v1/projects",
+          "fullFile": "D:\\Repos\\VideoIntelligence\\Core\\test\\v1\\projects.route.test.js",
+          "file": "\\test\\v1\\projects.route.test.js",
+          "beforeHooks": [
+            {
+              "title": "\"before each\" hook in \"v1/projects\"",
+              "fullTitle": "v1/projects \"before each\" hook in \"v1/projects\"",
+              "timedOut": false,
+              "duration": 883,
+              "state": null,
+              "speed": null,
+              "pass": false,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "// Create dummy project\nawait admin.firestore().collection(\"projects\").doc(\"dummy-0001\").set({\n  name: \"Dummy project\",\n  description: \"This is the description\",\n  ownerId: \"12345\",\n});\nconsole.log(\"Created dummy project\");",
+              "err": {},
+              "uuid": "dca1b00c-f8bd-45f7-8882-85f991fecda7",
+              "parentUUID": "6a731c8c-475d-44a9-8497-a2a4a158bf5e",
+              "isHook": true,
+              "skipped": false
+            }
+          ],
+          "afterHooks": [
+            {
+              "title": "\"after each\" hook in \"v1/projects\"",
+              "fullTitle": "v1/projects \"after each\" hook in \"v1/projects\"",
+              "timedOut": false,
+              "duration": 192,
+              "state": null,
+              "speed": null,
+              "pass": false,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "// Delete dummy project\nawait admin.firestore().collection(\"projects\").doc(\"dummy-0001\").delete();\nconsole.log(\"Deleted dummy project\");",
+              "err": {},
+              "uuid": "173ec231-0bcb-4316-a198-5b4afa98a04f",
+              "parentUUID": "6a731c8c-475d-44a9-8497-a2a4a158bf5e",
+              "isHook": true,
+              "skipped": false
+            }
+          ],
+          "tests": [
+            {
+              "title": "GET",
+              "fullTitle": "v1/projects GET",
+              "timedOut": false,
+              "duration": 6,
+              "state": "passed",
+              "speed": "fast",
+              "pass": true,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "chai\n  .request(server)\n  .get(\"/v1/projects\")\n  .set(\"content-type\", \"application/json\")\n  .send({\n    dummy: {\n      uid: \"12345\",\n      email: \"Nguyen Van Teo\",\n    },\n  })\n  .end((err, res) => {\n    const { projects } = res.body;\n    res.should.has.status(200);\n    assert.equal(projects.length, 1);\n    console.log(projects);\n  });",
+              "err": {},
+              "uuid": "cb485cb0-0fab-4d2c-a0dc-103daeb3bc23",
+              "parentUUID": "6a731c8c-475d-44a9-8497-a2a4a158bf5e",
+              "isHook": false,
+              "skipped": false
+            }
+          ],
+          "suites": [],
+          "passes": [
+            "cb485cb0-0fab-4d2c-a0dc-103daeb3bc23"
+          ],
+          "failures": [],
+          "pending": [],
+          "skipped": [],
+          "duration": 6,
+          "root": false,
+          "rootEmpty": false,
+          "_timeout": 2000
+        }
+      ],
+      "passes": [],
+      "failures": [],
+      "pending": [],
+      "skipped": [],
+      "duration": 0,
+      "root": true,
+      "rootEmpty": true,
+      "_timeout": 2000
+    }
+  ],
+  "meta": {
+    "mocha": {
+      "version": "8.1.3"
+    },
+    "mochawesome": {
+      "options": {
+        "quiet": false,
+        "reportFilename": "mochawesome",
+        "saveHtml": true,
+        "saveJson": true,
+        "consoleReporter": "spec",
+        "useInlineDiffs": false,
+        "code": true
+      },
+      "version": "6.1.1"
+    },
+    "marge": {
+      "options": null,
+      "version": "5.1.0"
+    }
+  }
+}
