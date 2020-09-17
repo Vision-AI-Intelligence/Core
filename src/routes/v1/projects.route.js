@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const authorization = require("../../middleware/authorization");
 const admin = require("firebase-admin");
-
+const DataValidation = require("../../misc/DataValidation")
 router.use(authorization);
 
 /*
@@ -114,7 +114,7 @@ router.put("/", (req, res) => {
     try {
         // let checkPid = await admin.firestore()
         //     .collection("projects").id; 
-        let checkExistedProject = await admin.firestore().collection("projects").doc(pid).get();
+        let checkExistedProject = admin.firestore().collection("projects").doc(pid).get();
         if (checkExistedProject.exists) {
             admin.firestore().collection("projects").doc(pid).update({
                 name: name,
@@ -152,7 +152,7 @@ router.delete("/", (req, res) => {
         return;
     }
     try {
-        let checkPid = await admin.firestore().collection("projects").id.toString();
+        let checkPid = admin.firestore().collection("projects").id.toString();
         if (checkPid === pid) {
             admin.firestore().collection("projects").doc(pid).delete().then(
                 res.status(200).send({
@@ -185,13 +185,17 @@ router.post("/invite", (req, res) => {
     //         message: " is required"
     //     });
     // }
-    pid === undefined || to === undefined ? res.status(404).send({
-        message: "Id is required"
-    }) : res.status(404).send({
-        message: "Collaboration's id is required"
-    })
+    // pid === undefined || to === undefined ? res.status(404).send({
+    //     message: "Id is required"
+    // }) : res.status(404).send({
+    //     message: "Collaboration's id is required"
+    // })
     try {
+        if (DataValidation.allNotUndefined(pid, to)) {
 
+        } else {
+
+        }
     } catch (err) {
         console.log(err);
     }
