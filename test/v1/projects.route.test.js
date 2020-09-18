@@ -42,10 +42,49 @@ describe("v1/projects", () => {
       });
   });
 
+  it("POST with error", async () => {
+    chai
+      .request(server)
+      .post("/v1/projects")
+      .set("content-type", "application/json")
+      .send({
+        dummy: {
+          uid: "12345",
+          email: "Nguyen Van Teo",
+        },
+        name: "Project 01",
+        description: "Description 01",
+      })
+      .end((err, res) => {
+        res.should.has.status(404);
+      });
+  });
+
+  it("POST without error", async () => {
+    chai
+      .request(server)
+      .post("/v1/projects")
+      .set("content-type", "application/json")
+      .send({
+        dummy: {
+          uid: "12345",
+          email: "Nguyen Van Teo",
+        },
+        id: "PROJECT-01",
+        name: "Project 01",
+        description: "Description 01",
+      })
+      .end((err, res) => {
+        res.should.has.status(200);
+      });
+  });
+
+  it("");
+
   afterEach(async () => {
     // Delete dummy project
     await admin.firestore().collection("projects").doc("dummy-0001").delete();
-
+    await admin.firestore().collection("projects").doc("PROJECT-01").delete();
     console.log("Deleted dummy project");
   });
 });

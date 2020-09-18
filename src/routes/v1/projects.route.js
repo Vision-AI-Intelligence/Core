@@ -34,62 +34,51 @@ router.get("/", async (req, res) => {
  */
 router.post("/", async (req, res) => {
     const { id, name, description } = req.body;
-    // if (id === undefined) {
-    //     res.status(404).send({
-    //         message: "Id is required",
-    //     });
-    //     return;
-    // }
-    // if (name === undefined) {
-    //     res.status(404).send({
-    //         message: "Name is required"
-    //     });
-    //     return;
-    // }
     try {
-        if (DataValidation.allNotUndefined(id, name)) {
-            let existedProjectDoc = await admin
-                .firestore()
-                .collection("projects")
-                .where("id", "==", id)
-                .get();
-            if (existedProjectDoc.docs.length != 0) {
-                res.status(statusCode.NotFound).send({
-                    message: "Id [" + id + "] already existed",
-                });
-                return;
-            } else {
-                // Save the project to firestore
-                admin.firestore().collection("projects").doc(id).set({
-                    id: id,
-                    name: name,
-                    description: description,
-                    ownerId: req.user.uid
-                }).then(
-                    res.status(statusCode.Created).send({
-                        message: "OK",
-                    })
-                ).catch((err) => {
-                    console.error("POST -> projects: ", err);
-                    res.status(statusCode.BadRequest).send({
-                        message: "Bad request"
-                    });
-                });
-            }
-        } else {
-            res.status(statusCode.NotFound).send({
+
+        if(!DataValidation.allNotUndefined(id,name)){
+             res.status(statusCode.NotFound).send({
                 message: "Not Found"
             });
             return;
         }
+
+      
+        let existedProjectDoc = await admin
+            .firestore()
+            .collection("projects")
+            .where("id", "==", id)
+            .get();
+        if (existedProjectDoc.docs.length != 0) {
+            res.status(statusCode.NotFound).send({
+                message: "Id [" + id + "] already existed",
+            });
+            return;
+        } else {
+            // Save the project to firestore
+            admin.firestore().collection("projects").doc(id).set({
+                id: id,
+                name: name,
+                description: description,
+                ownerId: req.user.uid
+            }).then(
+                res.status(statusCode.Created).send({
+                    message: "OK",
+                })
+            ).catch((err) => {
+                console.error("POST -> projects: ", err);
+                res.status(statusCode.BadRequest).send({
+                    message: "Bad request"
+                });
+            });
+        }
+        
     } catch (error) {
         res.status(statusCode.InternalServerError).send({
             ...error
         });
         console.log("POST -> projects ", error);
     }
-
-
 
 });
 
@@ -98,28 +87,8 @@ router.post("/", async (req, res) => {
 */
 router.put("/", async (req, res) => {
     const { pid, name, description } = req.body;
-    // Update only name and description
-    // if (pid === undefined) {
-    //     res.status(404).send({
-    //         message: "Id is required"
-    //     });
-    //     return;
-    // }
-    // if (name === undefined) {
-    //     res.status(404).send({
-    //         message: "Name is required"
-    //     });
-    //     return;
-    // }
-    // if (description === undefined) {
-    //     res.status(404).send({
-    //         message: "Description is required"
-    //     });
-    //     return;
-    // }
+
     try {
-        // let checkPid = await admin.firestore()
-        //     .collection("projects").id;
         if (DataValidation.allNotUndefined(pid, name, description)) {
             let checkExistedProject = admin.firestore().collection("projects").doc(pid).get();
             if (checkExistedProject.exists) {
@@ -162,12 +131,6 @@ router.put("/", async (req, res) => {
 */
 router.delete("/", async (req, res) => {
     const { pid } = req.query;
-    // if (pid === undefined) {
-    //     res.status(404).send({
-    //         message: "Id is required"
-    //     });
-    //     return;
-    // }
     try {
         if (DataValidation.allNotUndefined(pid)) {
             let checkPid = await admin.firestore().collection("projects").doc(pid).get();
@@ -207,17 +170,6 @@ router.delete("/", async (req, res) => {
 */
 router.post("/invite", async (req, res) => {
     const { pid, from, to } = req.query;
-    // to: not null, the collaborator's id'
-    // if(pid === undefined || to === undefined){
-    //     res.status(404).send({
-    //         message: " is required"
-    //     });
-    // }
-    // pid === undefined || to === undefined ? res.status(404).send({
-    //     message: "Id is required"
-    // }) : res.status(404).send({
-    //     message: "Collaboration's id is required"
-    // })
     try {
         if (DataValidation.allNotUndefined(pid, from, to)) {
             const message = {
