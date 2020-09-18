@@ -84,7 +84,7 @@ router.put("/", async (req, res) => {
       });
       return;
     }
-    let checkExistedProject = await admin
+    let checkExistedProject = admin
       .firestore()
       .collection("projects")
       .doc(pid)
@@ -127,11 +127,16 @@ router.delete("/", async (req, res) => {
       .collection("projects")
       .doc(pid)
       .get();
-    if (!(await checkPid).exists) {
-      res.send(statusCode.NotFound).send({
+    if (!checkPid.exists) {
+      res.status(statusCode.NotFound).send({
         message: "[" + pid + "] Not Found",
       });
       return;
+    }
+    if (!(req.user.uid == checkPid.data["ownerID"])) {
+      res.status(statusCode.Unauthorized).send({
+        message: "Unauthorized",
+      });
     }
     await admin.firestore().collection("projects").doc(pid).delete();
     res.status(statusCode.OK).send({
