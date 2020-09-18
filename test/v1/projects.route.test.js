@@ -80,7 +80,7 @@ describe("v1/projects", function () {
       });
   });
 
-  it("PUT without error", function () {
+  it("PUT without error", function (done) {
     requester
       .put("/v1/projects")
       .set("content-type", "application/json")
@@ -94,7 +94,7 @@ describe("v1/projects", function () {
         description: "Description XXX",
       })
       .then(async function (res) {
-        assert.equal(res.status, 200);
+        expect(res.status).to.equal(200);
         let projectDoc = await admin
           .firestore()
           .collection("projects")
@@ -102,6 +102,7 @@ describe("v1/projects", function () {
           .get();
         let data = projectDoc.data();
         expect(data).to.has.property("name", "Project XXX");
+        done();
       });
   });
 
@@ -120,6 +121,24 @@ describe("v1/projects", function () {
       .end((err, res) => {
         expect(res.status).to.equal(404);
       });
+  });
+
+  it("DELETE not existed project", function () {
+    requester.delete("/v1/projects?pid=PROJECT-XXXXXXXXXX").end((err, res) => {
+      expect(res.status).to.equal(404);
+    });
+  });
+
+  it("DELETE existed project", function (done) {
+    requester.delete("/v1/projects?pid=dummy-0001").end(async (err, res) => {
+      let doc = await admin
+        .firestore()
+        .collection("projects")
+        .doc("dummy-0001")
+        .get();
+      expect((await doc).exists).to.equal(false);
+      done();
+    });
   });
 
   after(async function () {
