@@ -74,17 +74,20 @@ router.get("/listing", async (req, res) => {
         message: "Not Found",
       });
     }
-    (await admin.auth().getUsers()).users[0];
-    let query = (await admin.firestore().collection("users").doc(uid).get())
-      .data;
-    let index = similarity(keyword, query, { sensitive: true });
-    if (index < 6) {
-      res.status(statusCode.NotFound).send({
-        message: "Not Found",
-      });
+    let query = (await admin.auth().getUsers()).users;
+    let result = [];
+    for (let i = 0; i < query.length; i++) {
+      let index = similarity(keyword, query[i]["email"], { sensitive: true });
+      if (index > 0.6) {
+        result.push({
+          uid: query[i]["uid"],
+          email: query[i]["email"],
+          photoURL: query[i].photoURL,
+        });
+      }
     }
     res.status(statusCode.OK).send({
-      result: query,
+      result: result,
     });
   } catch (error) {
     res.status(statusCode.InternalServerError).send({
