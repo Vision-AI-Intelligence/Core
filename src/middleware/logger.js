@@ -10,7 +10,6 @@ const logger = function (req, res, next) {
   let stream = this.cache.stream;
   let log = Date.now() + " - " + req.method + " - " + req.baseUrl + "\n";
   stream.write(log);
-  console.log(log);
   next();
 };
 
