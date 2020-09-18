@@ -8,7 +8,8 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "firebase-admin": "^9.1.1",
-    "mochawesome": "^6.1.1"
+    "mochawesome": "^6.1.1",
+    "similarity": "^1.2.1"
   },
   "devDependencies": {
     "chai": "^4.2.0",
