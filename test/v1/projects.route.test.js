@@ -124,22 +124,38 @@ describe("v1/projects", function () {
   });
 
   it("DELETE not existed project", function () {
-    requester.delete("/v1/projects?pid=PROJECT-XXXXXXXXXX").end((err, res) => {
-      expect(res.status).to.equal(401);
-    });
+    requester
+      .delete("/v1/projects?pid=PROJECT-XXXXXXXXXX")
+      .send({
+        dummy: {
+          uid: "12345",
+          email: "Nguyen Van Teo",
+        },
+      })
+      .end((err, res) => {
+        expect(res.status).to.equal(404);
+      });
   });
 
   it("DELETE existed project", function (done) {
-    requester.delete("/v1/projects?pid=dummy-0001").end(async (err, res) => {
-      let doc = await admin
-        .firestore()
-        .collection("projects")
-        .doc("dummy-0001")
-        .get();
-      let d = doc.data();
-      expect((await doc).exists).to.equal(false);
-      done();
-    });
+    requester
+      .delete("/v1/projects?pid=dummy-0001")
+      .send({
+        dummy: {
+          uid: "12345",
+          email: "Nguyen Van Teo",
+        },
+      })
+      .end(async (err, res) => {
+        let doc = await admin
+          .firestore()
+          .collection("projects")
+          .doc("dummy-0001")
+          .get();
+        let d = doc.data();
+        expect((await doc).exists).to.equal(false);
+        done();
+      });
   });
 
   after(async function () {

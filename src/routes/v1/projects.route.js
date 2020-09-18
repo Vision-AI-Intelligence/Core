@@ -84,7 +84,7 @@ router.put("/", async (req, res) => {
       });
       return;
     }
-    let checkExistedProject = admin
+    let checkExistedProject = await admin
       .firestore()
       .collection("projects")
       .doc(pid)
