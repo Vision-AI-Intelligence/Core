@@ -14,7 +14,7 @@ before(() => {
 });
 
 describe("v1/projects", function () {
-  before(async function () {
+  beforeEach(async function () {
     // Create dummy project
     await admin.firestore().collection("projects").doc("dummy-0001").set({
       name: "Dummy project",
@@ -125,7 +125,7 @@ describe("v1/projects", function () {
 
   it("DELETE not existed project", function () {
     requester.delete("/v1/projects?pid=PROJECT-XXXXXXXXXX").end((err, res) => {
-      expect(res.status).to.equal(404);
+      expect(res.status).to.equal(401);
     });
   });
 
@@ -136,6 +136,7 @@ describe("v1/projects", function () {
         .collection("projects")
         .doc("dummy-0001")
         .get();
+      let d = doc.data();
       expect((await doc).exists).to.equal(false);
       done();
     });

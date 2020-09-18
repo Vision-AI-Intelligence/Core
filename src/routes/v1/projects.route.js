@@ -84,7 +84,7 @@ router.put("/", async (req, res) => {
       });
       return;
     }
-    let checkExistedProject = admin
+    let checkExistedProject = await admin
       .firestore()
       .collection("projects")
       .doc(pid)
@@ -127,7 +127,7 @@ router.delete("/", async (req, res) => {
       .collection("projects")
       .doc(pid)
       .get();
-    if (!checkPid.exists) {
+    if (!(await checkPid).exists) {
       res.send(statusCode.NotFound).send({
         message: "[" + pid + "] Not Found",
       });
