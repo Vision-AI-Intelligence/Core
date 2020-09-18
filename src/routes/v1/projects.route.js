@@ -3,6 +3,7 @@ const authorization = require("../../middleware/authorization");
 const admin = require("firebase-admin");
 const DataValidation = require("../../misc/DataValidation")
 const statusCode = require("../../misc/StatusCode");
+const similarity = require("similarity");
 const FieldValue = admin.firestore.FieldValue;
 router.use(authorization);
 
@@ -289,6 +290,36 @@ router.delete("/collaborators", async (req, res) => {
             ...error
         });
         console.log("DELETE -> collaborators: ", error);
+    }
+});
+
+/*
+@api GET /v1/projects/collaborators/listing
+*/
+router.get("/collaborators/listing", async (req, res) => {
+    const { keyword } = req.body;
+    try {
+        if (!DataValidation.allNotUndefined(keyword)) {
+            res.status(statusCode.NotFound).send({
+                message: []
+            });
+        }
+        let query = await admin.firestore().collection("projects").get();
+        let result = [];
+        for (let i = 0; i < query.docs.length; i++) {
+            let index = similarity(keyword, query.docs[i].data()["collaborators"], { sensitive: true });
+            if (index > 0.6) {
+                result.push(data);
+            }
+        }
+        res.status(statusCode.OK).send({
+            result: result
+        });
+    } catch (error) {
+        res.status(statusCode.InternalServerError).send({
+            ...error
+        });
+        console.log("GET -> collab/listing: ", error);
     }
 });
 
