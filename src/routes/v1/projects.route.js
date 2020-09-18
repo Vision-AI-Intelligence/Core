@@ -36,14 +36,12 @@ router.post("/", async (req, res) => {
     const { id, name, description } = req.body;
     try {
 
-        if(!DataValidation.allNotUndefined(id,name)){
-             res.status(statusCode.NotFound).send({
+        if (!DataValidation.allNotUndefined(id, name)) {
+            res.status(statusCode.NotFound).send({
                 message: "Not Found"
             });
             return;
         }
-
-      
         let existedProjectDoc = await admin
             .firestore()
             .collection("projects")
@@ -54,25 +52,17 @@ router.post("/", async (req, res) => {
                 message: "Id [" + id + "] already existed",
             });
             return;
-        } else {
-            // Save the project to firestore
-            admin.firestore().collection("projects").doc(id).set({
-                id: id,
-                name: name,
-                description: description,
-                ownerId: req.user.uid
-            }).then(
-                res.status(statusCode.Created).send({
-                    message: "OK",
-                })
-            ).catch((err) => {
-                console.error("POST -> projects: ", err);
-                res.status(statusCode.BadRequest).send({
-                    message: "Bad request"
-                });
-            });
         }
-        
+        // Save the project to firestore
+        await admin.firestore().collection("projects").doc(id).create({
+            id: id,
+            name: name,
+            description: description,
+            ownerId: req.user.uid
+        });
+        res.status(statusCode.Created).send({
+            message: "OK",
+        });
     } catch (error) {
         res.status(statusCode.InternalServerError).send({
             ...error
@@ -244,10 +234,10 @@ router.post("/invite/accept", async (req, res) => {
                 await admin.firestore().collection("projects").doc(pid).collection("invitaion").doc(invitationId).delete();
                 // delete the invitation of user
                 await admin.firestore().collection("users").doc(uid).collection("invitation").doc(invitationId).delete();
-                await admin.firestore().collection("projects").doc(pid).set({
+                await admin.firestore().collection("projects").doc(pid).update({
                     collaborators: FieldValue.arrayUnion(uid)
                 });
-                await admin.firestore().collection("users").doc(uid).set({
+                await admin.firestore().collection("users").doc(uid).update({
                     collaborated: FieldValue.arrayUnion(pid)
                 })
                 res.status(statusCode.OK).send({
