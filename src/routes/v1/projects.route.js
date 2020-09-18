@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const authorization = require("../../middleware/authorization");
 const admin = require("firebase-admin");
-const DataValidation = require("../../misc/DataValidation")
+const DataValidation = require("../../misc/DataValidation");
 const statusCode = require("../../misc/StatusCode");
 const similarity = require("similarity");
 const FieldValue = admin.firestore.FieldValue;
@@ -36,10 +36,9 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
     const { id, name, description } = req.body;
     try {
-
         if (!DataValidation.allNotUndefined(id, name)) {
             res.status(statusCode.NotFound).send({
-                message: "Not Found"
+                message: "Not Found",
             });
             return;
         }
@@ -59,18 +58,17 @@ router.post("/", async (req, res) => {
             id: id,
             name: name,
             description: description,
-            ownerId: req.user.uid
+            ownerId: req.user.uid,
         });
         res.status(statusCode.Created).send({
             message: "OK",
         });
     } catch (error) {
         res.status(statusCode.InternalServerError).send({
-            ...error
+            ...error,
         });
         console.log("POST -> projects ", error);
     }
-
 });
 
 /*
@@ -82,28 +80,31 @@ router.put("/", async (req, res) => {
     try {
         if (!DataValidation.allNotUndefined(pid, name, description)) {
             res.status(statusCode.NotFound).send({
-                message: "Not Found"
+                message: "Not Found",
             });
             return;
         }
-        let checkExistedProject = admin.firestore().collection("projects").doc(pid).get();
+        let checkExistedProject = admin
+            .firestore()
+            .collection("projects")
+            .doc(pid)
+            .get();
         if (!checkExistedProject.exists) {
             res.status(statusCode.NotFound).send({
-                message: "Project [" + pid + "] is not founded"
+                message: "Project [" + pid + "] is not founded",
             });
             return;
         }
         await admin.firestore().collection("projects").doc(pid).update({
             name: name,
-            description: description
+            description: description,
         });
         res.status(statusCode.OK).send({
-            message: "Update OK"
-        })
-
+            message: "Update OK",
+        });
     } catch (error) {
         res.status(statusCode.InternalServerError).send({
-            ...error
+            ...error,
         });
         console.log("PUT -> projects: ", error);
     }
@@ -153,7 +154,7 @@ router.post("/invite", async (req, res) => {
     try {
         if (!DataValidation.allNotUndefined(pid, from, to)) {
             res.status(statusCode.NotFound).send({
-                message: "Not Found"
+                message: "Not Found",
             });
             return;
         }
@@ -161,18 +162,30 @@ router.post("/invite", async (req, res) => {
             from: from,
             to: to,
             time: Date.now().toString(),
-            project: pid
-        }
-        await admin.firestore().collection("projects").doc(pid).collection("invitation").doc().create(message);
+            project: pid,
+        };
+        await admin
+            .firestore()
+            .collection("projects")
+            .doc(pid)
+            .collection("invitation")
+            .doc()
+            .create(message);
         // send invitation to collaborator
-        await admin.firestore().collection("users").doc(to).collection("invitation").doc().create(message);
+        await admin
+            .firestore()
+            .collection("users")
+            .doc(to)
+            .collection("invitation")
+            .doc()
+            .create(message);
 
         res.status(statusCode.OK).send({
-            message: "OK"
+            message: "OK",
         });
     } catch (err) {
         res.status(statusCode.InternalServerError).send({
-            ...err
+            ...err,
         });
         console.log("POST -> invite: ", err);
     }
@@ -186,20 +199,31 @@ router.delete("/invite", async (req, res) => {
     try {
         if (!DataValidation.allNotUndefined(invitationId, pid)) {
             res.status(statusCode.NotFound).send({
-                message: "Not Found"
+                message: "Not Found",
             });
             return;
         }
-        await admin.firestore().collection("projects").doc(pid).collection("invitation").doc(invitationId).delete();
+        await admin
+            .firestore()
+            .collection("projects")
+            .doc(pid)
+            .collection("invitation")
+            .doc(invitationId)
+            .delete();
         // delete invitation of collaborator
-        await admin.firestore().collection("users").doc(req.user.uid).collection("invitation").doc(invitationId).delete();
+        await admin
+            .firestore()
+            .collection("users")
+            .doc(req.user.uid)
+            .collection("invitation")
+            .doc(invitationId)
+            .delete();
         res.status(statusCode.OK).send({
-            message: "OK"
+            message: "OK",
         });
-
     } catch (error) {
         res.status(statusCode.InternalServerError).send({
-            ...error
+            ...error,
         });
         console.log("DELETE -> invitation: ", error);
     }
@@ -217,30 +241,56 @@ router.post("/invite/accept", async (req, res) => {
     try {
         if (!DataValidation.allNotUndefined(invitationId, pid)) {
             res.status(statusCode.NotFound).send({
-                message: "Not Found"
+                message: "Not Found",
             });
             return;
         }
-        let getInvitation = await admin.firestore().collection("projects").doc(pid).collection("invitation").doc(invitationId).get();
+        let getInvitation = await admin
+            .firestore()
+            .collection("projects")
+            .doc(pid)
+            .collection("invitation")
+            .doc(invitationId)
+            .get();
         let uid = req.user.uid;
         if (getInvitation.exists) {
             // delete the invitation in project
-            await admin.firestore().collection("projects").doc(pid).collection("invitaion").doc(invitationId).delete();
+            await admin
+                .firestore()
+                .collection("projects")
+                .doc(pid)
+                .collection("invitaion")
+                .doc(invitationId)
+                .delete();
             // delete the invitation of user
-            await admin.firestore().collection("users").doc(uid).collection("invitation").doc(invitationId).delete();
-            await admin.firestore().collection("projects").doc(pid).update({
-                collaborators: FieldValue.arrayUnion(uid)
-            });
-            await admin.firestore().collection("users").doc(uid).update({
-                collaborated: FieldValue.arrayUnion(pid)
-            })
+            await admin
+                .firestore()
+                .collection("users")
+                .doc(uid)
+                .collection("invitation")
+                .doc(invitationId)
+                .delete();
+            await admin
+                .firestore()
+                .collection("projects")
+                .doc(pid)
+                .update({
+                    collaborators: FieldValue.arrayUnion(uid),
+                });
+            await admin
+                .firestore()
+                .collection("users")
+                .doc(uid)
+                .update({
+                    collaborated: FieldValue.arrayUnion(pid),
+                });
             res.status(statusCode.OK).send({
-                message: "OK"
+                message: "OK",
             });
         }
     } catch (error) {
         res.status(statusCode.InternalServerError).send({
-            ...error
+            ...error,
         });
         console.log("POST -> invitation/accept: ", error);
     }
@@ -254,18 +304,21 @@ router.get("/collaborators", async (req, res) => {
     try {
         if (!DataValidation.allNotUndefined(pid)) {
             res.status(statusCode.NotFound).send({
-                message: "Not Found"
+                message: "Not Found",
             });
             return;
         }
-        let getCollaborators = await admin.firestore().collection("projects").doc(pid).get("collaborators");
+        let getCollaborators = await admin
+            .firestore()
+            .collection("projects")
+            .doc(pid)
+            .get("collaborators");
         res.status(statusCode.OK).send({
-            collaborators: getCollaborators
+            collaborators: getCollaborators,
         });
-
     } catch (error) {
         res.status(statusCode.InternalServerError).send({
-            ...error
+            ...error,
         });
         console.log("GET -> collaborators: ", error);
     }
@@ -280,51 +333,24 @@ router.delete("/collaborators", async (req, res) => {
     try {
         if (!DataValidation.allNotUndefined(pid)) {
             res.status(statusCode.NotFound).send({
-                message: "Not Found"
+                message: "Not Found",
             });
         }
-        await admin.firestore().collection("projects").doc(pid).update({
-            collaborators: FieldValue.arrayRemove(uid)
-        });
+        await admin
+            .firestore()
+            .collection("projects")
+            .doc(pid)
+            .update({
+                collaborators: FieldValue.arrayRemove(uid),
+            });
         res.status(statusCode.OK).send({
-            message: "OK"
+            message: "OK",
         });
-
     } catch (error) {
         res.status(statusCode.InternalServerError).send({
-            ...error
+            ...error,
         });
         console.log("DELETE -> collaborators: ", error);
-    }
-});
-
-/*
-@api GET /v1/projects/collaborators/listing
-*/
-router.get("/collaborators/listing", async (req, res) => {
-    const { keyword } = req.body;
-    try {
-        if (!DataValidation.allNotUndefined(keyword)) {
-            res.status(statusCode.NotFound).send({
-                message: []
-            });
-        }
-        let query = await admin.firestore().collection("projects").get();
-        let result = [];
-        for (let i = 0; i < query.docs.length; i++) {
-            let index = similarity(keyword, query.docs[i].data()["collaborators"], { sensitive: true });
-            if (index > 0.6) {
-                result.push(data);
-            }
-        }
-        res.status(statusCode.OK).send({
-            result: result
-        });
-    } catch (error) {
-        res.status(statusCode.InternalServerError).send({
-            ...error
-        });
-        console.log("GET -> collab/listing: ", error);
     }
 });
 
