@@ -5,9 +5,9 @@
     "passes": 3,
     "pending": 0,
     "failures": 0,
-    "start": "2020-09-17T05:33:08.154Z",
-    "end": "2020-09-17T05:33:09.257Z",
-    "duration": 1103,
+    "start": "2020-09-17T06:19:27.283Z",
+    "end": "2020-09-17T06:19:28.259Z",
+    "duration": 976,
     "testsRegistered": 3,
     "passPercent": 100,
     "pendingPercent": 0,
@@ -18,7 +18,7 @@
   },
   "results": [
     {
-      "uuid": "aaa14d49-5d77-4498-87bc-ac2c00a41d2c",
+      "uuid": "aaf38b47-8849-4674-842d-ece539ad40bd",
       "title": "",
       "fullFile": "",
       "file": "",
@@ -27,7 +27,7 @@
           "title": "\"before all\" hook in \"{root}\"",
           "fullTitle": "\"before all\" hook in \"{root}\"",
           "timedOut": false,
-          "duration": 0,
+          "duration": 1,
           "state": null,
           "speed": null,
           "pass": false,
@@ -36,8 +36,8 @@
           "context": null,
           "code": "config.bypass = true;",
           "err": {},
-          "uuid": "eca95cdf-6320-45f1-94e4-2e33cb2bc65c",
-          "parentUUID": "aaa14d49-5d77-4498-87bc-ac2c00a41d2c",
+          "uuid": "bba9f4f7-f1b7-44cd-91a0-37bbe462beac",
+          "parentUUID": "aaf38b47-8849-4674-842d-ece539ad40bd",
           "isHook": true,
           "skipped": false
         }
@@ -46,9 +46,9 @@
       "tests": [],
       "suites": [
         {
-          "uuid": "bb7dbf45-0217-4c2e-9352-a546f2c24af8",
+          "uuid": "5b87399c-e818-4bc0-841d-6936d6fdebc0",
           "title": "Test Data Validation",
-          "fullFile": "D:\\Repos\\VideoIntelligence\\Core\\test\\misc\\DataValidation.test.js",
+          "fullFile": "D:\\Lab_Itss\\FinalGraduation\\VICbackend\\test\\misc\\DataValidation.test.js",
           "file": "\\test\\misc\\DataValidation.test.js",
           "beforeHooks": [],
           "afterHooks": [],
@@ -66,8 +66,8 @@
               "context": null,
               "code": "let obj = {\n  a: 1,\n  b: 3.14,\n  c: \"Hello World\",\n};\nassert.equal(DataValidation.allNotUndefined(obj.a, obj.b, obj.c), true);",
               "err": {},
-              "uuid": "772d3a23-040f-49ab-99bd-5e23b6f4cacc",
-              "parentUUID": "bb7dbf45-0217-4c2e-9352-a546f2c24af8",
+              "uuid": "e9d754f5-4459-4d67-8655-a097a9d7c26e",
+              "parentUUID": "5b87399c-e818-4bc0-841d-6936d6fdebc0",
               "isHook": false,
               "skipped": false
             },
@@ -84,16 +84,16 @@
               "context": null,
               "code": "let obj = {\n  a: 1,\n  b: 3.14,\n  c: \"Hello World\",\n};\nassert.equal(\n  DataValidation.allNotUndefined(obj.a, obj.b, obj.c, obj.d),\n  false\n);",
               "err": {},
-              "uuid": "d5d708fc-67d6-49e0-b183-e70a518133c4",
-              "parentUUID": "bb7dbf45-0217-4c2e-9352-a546f2c24af8",
+              "uuid": "327bd3e7-8111-4982-ac59-fb4f853a970c",
+              "parentUUID": "5b87399c-e818-4bc0-841d-6936d6fdebc0",
               "isHook": false,
               "skipped": false
             }
           ],
           "suites": [],
           "passes": [
-            "772d3a23-040f-49ab-99bd-5e23b6f4cacc",
-            "d5d708fc-67d6-49e0-b183-e70a518133c4"
+            "e9d754f5-4459-4d67-8655-a097a9d7c26e",
+            "327bd3e7-8111-4982-ac59-fb4f853a970c"
           ],
           "failures": [],
           "pending": [],
@@ -104,16 +104,16 @@
           "_timeout": 2000
         },
         {
-          "uuid": "6a731c8c-475d-44a9-8497-a2a4a158bf5e",
+          "uuid": "df71d941-7821-45d2-aac6-73c449b877c5",
           "title": "v1/projects",
-          "fullFile": "D:\\Repos\\VideoIntelligence\\Core\\test\\v1\\projects.route.test.js",
+          "fullFile": "D:\\Lab_Itss\\FinalGraduation\\VICbackend\\test\\v1\\projects.route.test.js",
           "file": "\\test\\v1\\projects.route.test.js",
           "beforeHooks": [
             {
               "title": "\"before each\" hook in \"v1/projects\"",
               "fullTitle": "v1/projects \"before each\" hook in \"v1/projects\"",
               "timedOut": false,
-              "duration": 883,
+              "duration": 785,
               "state": null,
               "speed": null,
               "pass": false,
@@ -122,8 +122,8 @@
               "context": null,
               "code": "// Create dummy project\nawait admin.firestore().collection(\"projects\").doc(\"dummy-0001\").set({\n  name: \"Dummy project\",\n  description: \"This is the description\",\n  ownerId: \"12345\",\n});\nconsole.log(\"Created dummy project\");",
               "err": {},
-              "uuid": "dca1b00c-f8bd-45f7-8882-85f991fecda7",
-              "parentUUID": "6a731c8c-475d-44a9-8497-a2a4a158bf5e",
+              "uuid": "855e374e-e6df-47ca-9805-616cf145dab2",
+              "parentUUID": "df71d941-7821-45d2-aac6-73c449b877c5",
               "isHook": true,
               "skipped": false
             }
@@ -133,7 +133,7 @@
               "title": "\"after each\" hook in \"v1/projects\"",
               "fullTitle": "v1/projects \"after each\" hook in \"v1/projects\"",
               "timedOut": false,
-              "duration": 192,
+              "duration": 127,
               "state": null,
               "speed": null,
               "pass": false,
@@ -142,8 +142,8 @@
               "context": null,
               "code": "// Delete dummy project\nawait admin.firestore().collection(\"projects\").doc(\"dummy-0001\").delete();\nconsole.log(\"Deleted dummy project\");",
               "err": {},
-              "uuid": "173ec231-0bcb-4316-a198-5b4afa98a04f",
-              "parentUUID": "6a731c8c-475d-44a9-8497-a2a4a158bf5e",
+              "uuid": "5d1e9c42-1145-4939-b108-a161fb5ef171",
+              "parentUUID": "df71d941-7821-45d2-aac6-73c449b877c5",
               "isHook": true,
               "skipped": false
             }
@@ -162,15 +162,15 @@
               "context": null,
               "code": "chai\n  .request(server)\n  .get(\"/v1/projects\")\n  .set(\"content-type\", \"application/json\")\n  .send({\n    dummy: {\n      uid: \"12345\",\n      email: \"Nguyen Van Teo\",\n    },\n  })\n  .end((err, res) => {\n    const { projects } = res.body;\n    res.should.has.status(200);\n    assert.equal(projects.length, 1);\n    console.log(projects);\n  });",
               "err": {},
-              "uuid": "cb485cb0-0fab-4d2c-a0dc-103daeb3bc23",
-              "parentUUID": "6a731c8c-475d-44a9-8497-a2a4a158bf5e",
+              "uuid": "283e0668-552b-4fc2-8360-a0f043e3db9d",
+              "parentUUID": "df71d941-7821-45d2-aac6-73c449b877c5",
               "isHook": false,
               "skipped": false
             }
           ],
           "suites": [],
           "passes": [
-            "cb485cb0-0fab-4d2c-a0dc-103daeb3bc23"
+            "283e0668-552b-4fc2-8360-a0f043e3db9d"
           ],
           "failures": [],
           "pending": [],
