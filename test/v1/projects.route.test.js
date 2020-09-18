@@ -93,7 +93,7 @@ describe("v1/projects", function () {
         name: "Project XXX",
         description: "Description XXX",
       })
-      .end(async function (err, res) {
+      .then(async function (res) {
         assert.equal(res.status, 200);
         let projectDoc = await admin
           .firestore()
