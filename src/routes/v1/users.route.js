@@ -66,21 +66,21 @@ router.post("/", async (req, res) => {
 */
 router.get("/listing", async (req, res) => {
     const { keyword } = req.body;
-    const uid = req.user.uid;
     try {
         if (!DataValidation.allNotUndefined(keyword)) {
             res.status(statusCode.NotFound).send({
-                message: "Not Found"
+                message: []
             })
         }
         let query = (await admin.auth().getUsers()).users;
         let result = [];
         for (let i = 0; i < query.length; i++) {
             let index = similarity(keyword, query[i]["email"], { sensitive: true });
-            if (index > 6) {
+            if (index > 0.6) {
                 result.push({
-                    uid: query[i]["uid"],
-                    email: query[i]["email"],
+                    uid: query[i].uid,
+                    email: query[i].email,
+                    photoURL: query[i].photoURL
                 });
             }
         }
