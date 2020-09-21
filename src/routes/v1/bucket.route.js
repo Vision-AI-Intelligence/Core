@@ -37,7 +37,7 @@ router.get("/", async (req, res) => {
  * @api {GET} /v1/bucket/metadata Get file's metadata or folder
  * @apiParam  {String} pid Project's id
  * @apiParam  {String} bid Bucket's id
- * @apiParam  {String} f File/directory name
+ * @apiParam  {String} f File|directory name
  */
 router.get("/metadata", async (req, res) => {
   const { pid, bid, f } = req.query;
@@ -63,22 +63,22 @@ router.put("/mkdir", async (req, res) => {
  * @api {PUT} /v1/bucket/mv Move file or directory
  * @apiParam  {String} pid Project's id
  * @apiParam  {String} bid Bucket's id
- * @apiParam  {String} src Source file/directory
- * @apiParam  {String} dest Destination file/directory
+ * @apiParam  {String} src Source file|directory
+ * @apiParam  {String} des Destination file|directory
  */
 router.put("/mv", async (req, res) => {
-  const { pid, bid, src, dest } = req.body;
+  const { pid, bid, src, des } = req.body;
 });
 
 /**
  * @api {PUT} /v1/bucket/cp Copy file or directory
  * @apiParam  {String} pid Project's id
  * @apiParam  {String} bid Bucket's id
- * @apiParam  {String} src Source file/directory
- * @apiParam  {String} dest Destination file/directory
+ * @apiParam  {String} src Source file|directory
+ * @apiParam  {String} des Destination file|directory
  */
 router.put("/cp", async (req, res) => {
-  const { pid, bid, src, dest } = req.body;
+  const { pid, bid, src, des } = req.body;
 });
 
 /**
@@ -95,12 +95,34 @@ router.put("/rm", async (req, res) => {
  * @api {GET} /v1/bucket/download Download a file or a folder
  * @apiParam  {String} pid Project's id
  * @apiParam  {String} bid Bucket's id
- * @apiParam  {String} f File/directory name
+ * @apiParam  {String} f File|directory name
  */
 router.get("/download", async (req, res) => {
   const { pid, bid, f } = req.query;
 });
 
 // Zip, Unzip are the worker jobs
+
+/**
+ * @api {PUT} /v1/bucket/zip Zip files and folders
+ * @apiParam  {String} pid Project's id
+ * @apiParam  {String} bid Bucket's id
+ * @apiParam  {String} src Source file|directory
+ * @apiParam  {String} des Destination file|directory
+ */
+router.put("/zip", async (req, res) => {
+  const { pid, bid, src, des } = req.body;
+});
+
+/**
+ * @api {PUT} /v1/bucket/unzip Unzip files and folders
+ * @apiParam  {String} pid Project's id
+ * @apiParam  {String} bid Bucket's id
+ * @apiParam  {String} src Source file|directory
+ * @apiParam  {String} des Destination file|directory
+ */
+router.put("/unzip", async (req, res) => {
+  const { pid, bid, src, des } = req.body;
+});
 
 module.exports = router;
