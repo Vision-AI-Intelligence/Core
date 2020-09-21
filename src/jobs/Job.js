@@ -1,4 +1,4 @@
-const kue = require("kue");
+const Queue = require("bull");
 
 const Job = function () {};
 

@@ -2,6 +2,7 @@ const router = require("express").Router();
 const authorization = require("../../middleware/authorization");
 const admin = require("firebase-admin");
 const fs = require("fs");
+const bucketQueue = require("../../jobs/bucket.jobs");
 
 router.use(authorization);
 
