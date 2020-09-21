@@ -12,8 +12,8 @@ services:
       - $PWD/redis-data:/var/lib/redis
       - $PWD/redis.conf:/usr/local/etc/redis/redis.conf
 
-    # environment:
-    #   - REDIS_REPLICATION_MODE=master
+    environment:
+      - REDIS_REPLICATION_MODE=master
 
     networks:
       node_net:
