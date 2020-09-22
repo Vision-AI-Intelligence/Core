@@ -3,13 +3,20 @@ const config = require("../config");
 const statusCode = require("../misc/StatusCode");
 const authorization = async function (req, res, next) {
   const { authorization } = req.headers;
-  const { dummy } = req.body;
+  let { dummy } = req.body;
   if (authorization === undefined) {
     if (dummy === undefined) {
-      res.status(statusCode.Unauthorized).send({
-        message: "Unauthorized",
-      });
-      return;
+      const { dummyUid, dummyEmail } = req.query;
+      if (dummyUid === undefined || dummyEmail === undefined) {
+        res.status(statusCode.Unauthorized).send({
+          message: "Unauthorized",
+        });
+        return;
+      }
+      dummy = {
+        uid: dummyUid,
+        email: dummyEmail,
+      };
     }
     if (config.bypass) {
       req.user = { ...dummy };

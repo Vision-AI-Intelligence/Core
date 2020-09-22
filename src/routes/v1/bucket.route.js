@@ -16,11 +16,11 @@ router.use(authorization);
 
 const storage = multer.diskStorage({
   destination: (req, res, callback) => {
-    callback(null, "upload");
+    callback(null, Config.bucketTemp);
   },
   filename: (req, file, callback) => {
     console.log(file.filename);
-    callback(null, path.extname(file.originalname) + Date.now());
+    callback(null, Date.now() + "-" + file.originalname);
   },
 });
 const uploadFile = multer({ storage: storage });
@@ -181,8 +181,9 @@ router.get("/metadata", async (req, res) => {
  * @apiParam  {String} bid Bucket's id
  * @apiParam  {String} d Current directory. Default is root /
  */
-router.post("/upload", async (req, res) => {
+router.post("/upload", uploadFile.single("file"), async (req, res) => {
   const { pid, bid, d } = req.query;
+  let uploadedFile = req.file;
 
   // Checksum is optional
   if (!DataValidation.allNotUndefined(pid, bid, d)) {
@@ -192,7 +193,13 @@ router.post("/upload", async (req, res) => {
     return;
   }
   try {
-    res.status(statusCode.OK).send(req.files);
+    fse.moveSync(
+      path.join(Config.bucketTemp, uploadedFile.filename),
+      path.join(Config.bucketSite, bid, d, uploadedFile.originalname)
+    );
+    res.status(statusCode.OK).send({
+      message: "OK",
+    });
   } catch (error) {
     res.status(statusCode.InternalServerError).send({
       ...error,
