@@ -1,5 +1,6 @@
 const Queue = require("bull");
 const Config = require("../config");
+const DataValidation = require("../misc/DataValidation");
 
 const DOWNLOAD_QUEUE = "DOWNLOAD_QUEUE";
 const ZIP_QUEUE = "ZIP_QUEUE";
@@ -13,7 +14,12 @@ const downloadQueue = new Queue(DOWNLOAD_QUEUE, {
   },
 });
 
-downloadQueue.process(async function (job, done) {});
+downloadQueue.process(async function (job, done) {
+  const { url, des } = job.data;
+  if (!DataValidation.allNotUndefined(url, des)) {
+    done("Url and destination directory are required");
+  }
+});
 
 const zipQueue = new Queue(ZIP_QUEUE, {
   redis: {
@@ -22,7 +28,7 @@ const zipQueue = new Queue(ZIP_QUEUE, {
     password: Config.redisSecret,
   },
 });
-function zipFile(src, data, des) {}
+
 const unzipQueue = new Queue(UNZIP_QUEUE, {
   redis: {
     host: Config.redisHost,
