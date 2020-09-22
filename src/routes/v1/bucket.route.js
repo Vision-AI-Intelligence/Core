@@ -5,6 +5,9 @@ const fs = require("fs");
 const bucketQueue = require("../../jobs/bucket.jobs");
 const statusCode = require("../../misc/StatusCode");
 const DataValidation = require("../../misc/DataValidation");
+const Config = require("../../config");
+const path = require("path");
+
 router.use(authorization);
 
 /**
@@ -20,17 +23,26 @@ router.get("/list", async (req, res) => {
   try {
     if (!DataValidation.allNotUndefined(pid)) {
       res.status(statusCode.NotFound).send({
-        message: "Not Found"
+        message: "Not Found",
       });
     }
-    let bucketsData = await admin.firestore().collection("projects").where("ownerId", "==", req.user.uid).get("buckets");
+    let projectDoc = await admin.firestore().collection("projects").doc(pid);
+    let projectData = (await projectDoc.get()).data();
+    if (projectData["ownerId"] != req.user.uid) {
+      if (!projectData["collaborators"].includes(req.user.uid)) {
+        res.status(statusCode.Forbidden).send({
+          message: "Accessing to project [" + pid + "] does not allow",
+        });
+        return;
+      }
+    }
     res.status(statusCode.OK).send({
-      buckets: bucketsData
-    })
+      buckets: projectData["buckets"],
+    });
   } catch (error) {
     res.status(statusCode.InternalServerError).send({
-      ...error
-    })
+      ...error,
+    });
     console.log("GET -> bucket/listing: ", error);
   }
 });
@@ -49,6 +61,14 @@ router.get("/list", async (req, res) => {
  */
 router.get("/", async (req, res) => {
   const { pid, bid, d } = req.query;
+  let currentDir = path.join(Config.bucketSite, bid, d);
+  let items = fs.readdirSync(currentDir);
+  let files = items.filter((f) => fs.statSync(f).isFile());
+  let folders = items.filter((f) => !files.includes(f));
+  res.status(statusCode.OK).send({
+    files: files,
+    folders: folders,
+  });
 });
 
 /**
