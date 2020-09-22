@@ -10,11 +10,23 @@ const Config = require("../../config");
 const path = require("path");
 const getFolderSize = require("get-folder-size");
 const StatusCode = require("../../misc/StatusCode");
+const multer = require("multer");
 
 router.use(authorization);
 
+const storage = multer.diskStorage({
+  destination: (req, res, callback) => {
+    callback(null, "upload");
+  },
+  filename: (req, file, callback) => {
+    console.log(file.filename);
+    callback(null, path.extname(file.originalname) + Date.now());
+  },
+});
+const uploadFile = multer({ storage: storage });
+
 async function checkProjectPerm(res, pid, uid) {
-  let projectDoc = await admin.firestore().collection("projects").doc(pid);
+  let projectDoc = admin.firestore().collection("projects").doc(pid);
   let projectData = (await projectDoc.get()).data();
   if (projectData["ownerId"] != uid) {
     if (!projectData["collaborators"].includes(uid)) {
@@ -115,10 +127,11 @@ router.get("/", async (req, res) => {
       files: files,
       folders: folders,
     });
-  } catch (e) {
+  } catch (error) {
     res
       .status(statusCode.InternalServerError)
       .send({ message: "Internal Server Error" });
+    console.log("GET -> bucket /: ", error);
   }
 });
 
@@ -130,11 +143,36 @@ router.get("/", async (req, res) => {
  */
 router.get("/metadata", async (req, res) => {
   const { pid, bid, f } = req.query;
-  let currentDir = path.join(Config.bucketSite, bid, f);
-  let stat = fs.statSync(currentDir);
-  res.status(statusCode.OK).send({
-    stat: { ...stat },
-  });
+  if (!DataValidation.allNotUndefined(pid, bid, f)) {
+    res.status(statusCode.NotFound).send({
+      message: "Not Found",
+    });
+    return;
+  }
+  try {
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
+    let bucketData = (
+      await admin.firestore().collection("buckets").doc(bid).get()
+    ).data();
+    if (!bucketData["isPublic"]) {
+      res.status(statusCode.NotFound).send({
+        message: "Not Found",
+      });
+      return;
+    }
+    let currentDir = path.join(Config.bucketSite, bid, f);
+    let stat = fs.statSync(currentDir);
+    res.status(statusCode.OK).send({
+      stat: { ...stat },
+    });
+  } catch (error) {
+    res.status(statusCode.InternalServerError).send({
+      ...error,
+    });
+    console.log("GET -> bucket/metadata: ", error);
+  }
 });
 
 /**
@@ -147,6 +185,20 @@ router.post("/upload", async (req, res) => {
   const { pid, bid, d } = req.query;
 
   // Checksum is optional
+  if (!DataValidation.allNotUndefined(pid, bid, d)) {
+    res.status(statusCode.NotFound).send({
+      message: "Not Found",
+    });
+    return;
+  }
+  try {
+    res.status(statusCode.OK).send(req.files);
+  } catch (error) {
+    res.status(statusCode.InternalServerError).send({
+      ...error,
+    });
+    console.log("POST -> upload/file: ", error);
+  }
 });
 
 /**
