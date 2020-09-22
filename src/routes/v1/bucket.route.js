@@ -3,7 +3,8 @@ const authorization = require("../../middleware/authorization");
 const admin = require("firebase-admin");
 const fs = require("fs");
 const bucketQueue = require("../../jobs/bucket.jobs");
-
+const statusCode = require("../../misc/StatusCode");
+const DataValidation = require("../../misc/DataValidation");
 router.use(authorization);
 
 /**
@@ -16,6 +17,22 @@ router.use(authorization);
  */
 router.get("/list", async (req, res) => {
   const { pid } = req.query;
+  try {
+    if (!DataValidation.allNotUndefined(pid)) {
+      res.status(statusCode.NotFound).send({
+        message: "Not Found"
+      });
+    }
+    let bucketsData = await admin.firestore().collection("projects").where("ownerId", "==", req.user.uid).get("buckets");
+    res.status(statusCode.OK).send({
+      buckets: bucketsData
+    })
+  } catch (error) {
+    res.status(statusCode.InternalServerError).send({
+      ...error
+    })
+    console.log("GET -> bucket/listing: ", error);
+  }
 });
 
 /**
