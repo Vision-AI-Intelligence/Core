@@ -2,11 +2,14 @@ const router = require("express").Router();
 const authorization = require("../../middleware/authorization");
 const admin = require("firebase-admin");
 const fs = require("fs");
+const fse = require("fs-extra");
 const bucketQueue = require("../../jobs/bucket.jobs");
 const statusCode = require("../../misc/StatusCode");
 const DataValidation = require("../../misc/DataValidation");
 const Config = require("../../config");
 const path = require("path");
+const getFolderSize = require("get-folder-size");
+const StatusCode = require("../../misc/StatusCode");
 
 router.use(authorization);
 
@@ -22,6 +25,23 @@ async function checkProjectPerm(res, pid, uid) {
     }
   }
   return true;
+}
+
+async function calcBucketSize(res, pid, bid) {
+  try {
+    let result = await new Promise((resolve, reject) => {
+      getFolderSize(path.join(Config.bucketSite, bid), (err, size) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(size);
+      });
+    });
+    return result;
+  } catch {
+    return -1;
+  }
 }
 
 /**
@@ -138,6 +158,26 @@ router.post("/upload", async (req, res) => {
  */
 router.put("/mkdir", async (req, res) => {
   const { pid, bid, dir, d } = req.body;
+  if (!DataValidation.allNotUndefined(pid, bid, dir, d)) {
+    res.status(statusCode.NotFound).send({
+      message: "Require: pid, bid, dir, d",
+    });
+    return;
+  }
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
+  try {
+    let currentDir = path.join(Config.bucketSite, bid, dir, d);
+    fs.mkdirSync(currentDir);
+    res.status(StatusCode.OK).send({
+      message: "OK",
+    });
+  } catch (e) {
+    res.status(StatusCode.InternalServerError).send({
+      message: "Internal Server Error",
+    });
+  }
 });
 
 /**
@@ -149,6 +189,25 @@ router.put("/mkdir", async (req, res) => {
  */
 router.put("/mv", async (req, res) => {
   const { pid, bid, src, des } = req.body;
+  if (!DataValidation.allNotUndefined(pid, bid, dir, d)) {
+    res.status(statusCode.NotFound).send({
+      message: "Require: pid, bid, dir, d",
+    });
+    return;
+  }
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
+  try {
+    fse.moveSync(
+      path.join(Config.bucketSite, bid, src),
+      path.join(Config.bucketSite, bid, des)
+    );
+  } catch (e) {
+    res.status(StatusCode.InternalServerError).send({
+      message: "Internal Server Error",
+    });
+  }
 });
 
 /**
@@ -160,6 +219,26 @@ router.put("/mv", async (req, res) => {
  */
 router.put("/cp", async (req, res) => {
   const { pid, bid, src, des } = req.body;
+  if (!DataValidation.allNotUndefined(pid, bid, dir, d)) {
+    res.status(statusCode.NotFound).send({
+      message: "Require: pid, bid, dir, d",
+    });
+    return;
+  }
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
+  try {
+    fse.copySync(
+      path.join(Config.bucketSite, bid, src),
+      path.join(Config.bucketSite, bid, des),
+      { recursive: true }
+    );
+  } catch (e) {
+    res.status(StatusCode.InternalServerError).send({
+      message: "Internal Server Error",
+    });
+  }
 });
 
 /**
@@ -170,6 +249,22 @@ router.put("/cp", async (req, res) => {
  */
 router.put("/rm", async (req, res) => {
   const { pid, bid, d } = req.body;
+  if (!DataValidation.allNotUndefined(pid, bid, dir, d)) {
+    res.status(statusCode.NotFound).send({
+      message: "Require: pid, bid, dir, d",
+    });
+    return;
+  }
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
+  try {
+    fse.removeSync(path.join(Config.bucketSite, bid, d));
+  } catch (e) {
+    res.status(StatusCode.InternalServerError).send({
+      message: "Internal Server Error",
+    });
+  }
 });
 
 /**
