@@ -10,6 +10,20 @@ const path = require("path");
 
 router.use(authorization);
 
+async function checkProjectPerm(res, pid, uid) {
+  let projectDoc = await admin.firestore().collection("projects").doc(pid);
+  let projectData = (await projectDoc.get()).data();
+  if (projectData["ownerId"] != uid) {
+    if (!projectData["collaborators"].includes(uid)) {
+      res.status(statusCode.Forbidden).send({
+        message: "Accessing to project [" + pid + "] does not allow",
+      });
+      return false;
+    }
+  }
+  return true;
+}
+
 /**
  * @api {GET} /v1/bucket/list Get the project's buckets
  * @apiParam  {String} pid Project's id
@@ -26,15 +40,8 @@ router.get("/list", async (req, res) => {
         message: "Not Found",
       });
     }
-    let projectDoc = await admin.firestore().collection("projects").doc(pid);
-    let projectData = (await projectDoc.get()).data();
-    if (projectData["ownerId"] != req.user.uid) {
-      if (!projectData["collaborators"].includes(req.user.uid)) {
-        res.status(statusCode.Forbidden).send({
-          message: "Accessing to project [" + pid + "] does not allow",
-        });
-        return;
-      }
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
     }
     res.status(statusCode.OK).send({
       buckets: projectData["buckets"],
@@ -61,14 +68,38 @@ router.get("/list", async (req, res) => {
  */
 router.get("/", async (req, res) => {
   const { pid, bid, d } = req.query;
-  let currentDir = path.join(Config.bucketSite, bid, d);
-  let items = fs.readdirSync(currentDir);
-  let files = items.filter((f) => fs.statSync(f).isFile());
-  let folders = items.filter((f) => !files.includes(f));
-  res.status(statusCode.OK).send({
-    files: files,
-    folders: folders,
-  });
+  if (!DataValidation.allNotUndefined(pid, bid, d)) {
+    res.status(statusCode.NotFound).send({
+      message: "Require: pid, bid, d",
+    });
+    return;
+  }
+  try {
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
+    let bucketData = (
+      await admin.firestore().collection("buckets").doc(bid).get()
+    ).data();
+    if (!bucketData["isPublic"]) {
+      res.status(statusCode.NotFound).send({
+        message: "Bucket [" + bid + "] is not public",
+      });
+      return;
+    }
+    let currentDir = path.join(Config.bucketSite, bid, d);
+    let items = fs.readdirSync(currentDir);
+    let files = items.filter((f) => fs.statSync(f).isFile());
+    let folders = items.filter((f) => !files.includes(f));
+    res.status(statusCode.OK).send({
+      files: files,
+      folders: folders,
+    });
+  } catch (e) {
+    res
+      .status(statusCode.InternalServerError)
+      .send({ message: "Internal Server Error" });
+  }
 });
 
 /**
@@ -79,6 +110,11 @@ router.get("/", async (req, res) => {
  */
 router.get("/metadata", async (req, res) => {
   const { pid, bid, f } = req.query;
+  let currentDir = path.join(Config.bucketSite, bid, f);
+  let stat = fs.statSync(currentDir);
+  res.status(statusCode.OK).send({
+    stat: { ...stat },
+  });
 });
 
 /**
@@ -89,6 +125,7 @@ router.get("/metadata", async (req, res) => {
  */
 router.post("/upload", async (req, res) => {
   const { pid, bid, d } = req.query;
+
   // Checksum is optional
 });
 
