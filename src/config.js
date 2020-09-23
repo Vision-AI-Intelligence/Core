@@ -7,4 +7,5 @@ module.exports = {
   redisPort: 6379,
   redisSecret: "4t6PN9SJrXcN2ZLR47cnzG93wCLZa2W7",
   bucketSite: "./buckets",
+  bucketTemp: "./tmp",
 };
