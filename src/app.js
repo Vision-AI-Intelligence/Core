@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const config = require("./config");
 const cors = require("cors");
 const app = express();
+const { UI } = require("bull-board");
 
 var admin = require("firebase-admin");
 
@@ -21,6 +22,7 @@ app.use(require("./middleware/logger"));
 app.use("/v1/users", require("./routes/v1/users.route"));
 app.use("/v1/projects", require("./routes/v1/projects.route"));
 app.use("/v1/bucket", require("./routes/v1/bucket.route"));
+app.use("/v1/dashboard/jobs", UI);
 // End of routes assignement zone
 
 app.listen(config.port, config.host, () => {

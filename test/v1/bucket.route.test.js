@@ -37,7 +37,7 @@ describe("/v1/bucket", () => {
     });
     console.log("Created dummy project");
   });
-  it("/v1/bucket/upload Sucessful", async () => {
+  it("POST /v1/bucket/upload Sucessful", async () => {
     requester
       .post(
         "/v1/bucket/upload?dummyUid=12345&dummyEmail=teo@gmail.com&pid=dummy-0001&bid=dummy-bucket-001&d=/"
@@ -59,5 +59,13 @@ describe("/v1/bucket", () => {
     fs.rmdirSync(path.join(config.bucketSite, "dummy-bucket-001"), {
       recursive: true,
     });
+    requester.close();
+    // Delete dummy project
+    await admin.firestore().collection("projects").doc("dummy-0001").delete();
+    await admin
+      .firestore()
+      .collection("buckets")
+      .doc("dummy-bucket-001")
+      .delete();
   });
 });
