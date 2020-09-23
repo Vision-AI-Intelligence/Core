@@ -184,7 +184,8 @@ router.get("/metadata", async (req, res) => {
 router.post("/upload", uploadFile.single("file"), async (req, res) => {
   const { pid, bid, d } = req.query;
   let uploadedFile = req.file;
-
+  let currentDir = path.join(Config.bucketTemp, uploadedFile.filename);
+  let destDir = path.join(Config.bucketSite, bid, d, uploadedFile.originalname);
   // Checksum is optional
   if (!DataValidation.allNotUndefined(pid, bid, d)) {
     res.status(statusCode.NotFound).send({
@@ -193,10 +194,13 @@ router.post("/upload", uploadFile.single("file"), async (req, res) => {
     return;
   }
   try {
-    fse.moveSync(
-      path.join(Config.bucketTemp, uploadedFile.filename),
-      path.join(Config.bucketSite, bid, d, uploadedFile.originalname)
-    );
+    if (!fs.existsSync(currentDir)) {
+      res.status(statusCode.NotFound).send({
+        message: "Not Found"
+      });
+      return;
+    }
+    fse.moveSync(currentDir, destDir, { overwrite: false });
     res.status(statusCode.OK).send({
       message: "OK",
     });
@@ -248,6 +252,8 @@ router.put("/mkdir", async (req, res) => {
  */
 router.put("/mv", async (req, res) => {
   const { pid, bid, src, des } = req.body;
+  let currentDir = path.join(Config.bucketSite, bid, src);
+  let destDir = path.join(Config.bucketSite, bid, des);
   if (!DataValidation.allNotUndefined(pid, bid, dir, d)) {
     res.status(statusCode.NotFound).send({
       message: "Require: pid, bid, dir, d",
@@ -258,10 +264,13 @@ router.put("/mv", async (req, res) => {
     return;
   }
   try {
-    fse.moveSync(
-      path.join(Config.bucketSite, bid, src),
-      path.join(Config.bucketSite, bid, des)
-    );
+    if (!fs.existsSync(currentDir)) {
+      res.status(statusCode.NotFound).send({
+        message: "Not Found"
+      });
+      return;
+    }
+    fse.moveSync(currentDir, destDir, { overwrite: false });
   } catch (e) {
     res.status(StatusCode.InternalServerError).send({
       message: "Internal Server Error",
@@ -278,6 +287,8 @@ router.put("/mv", async (req, res) => {
  */
 router.put("/cp", async (req, res) => {
   const { pid, bid, src, des } = req.body;
+  let currentDir = path.join(Config.bucketSite, bid, src);
+  let destDir = path.join(Config.bucketSite, bid, des);
   if (!DataValidation.allNotUndefined(pid, bid, dir, d)) {
     res.status(statusCode.NotFound).send({
       message: "Require: pid, bid, dir, d",
@@ -288,11 +299,13 @@ router.put("/cp", async (req, res) => {
     return;
   }
   try {
-    fse.copySync(
-      path.join(Config.bucketSite, bid, src),
-      path.join(Config.bucketSite, bid, des),
-      { recursive: true }
-    );
+    if (!fs.existsSync(currentDir)) {
+      res.status(statusCode.NotFound).send({
+        message: "Not Found"
+      });
+      return;
+    }
+    fse.copySync(currentDir, destDir, { recursive: true, overwrite: false });
   } catch (e) {
     res.status(StatusCode.InternalServerError).send({
       message: "Internal Server Error",
@@ -308,6 +321,7 @@ router.put("/cp", async (req, res) => {
  */
 router.put("/rm", async (req, res) => {
   const { pid, bid, d } = req.body;
+  let currentDir = path.join(Config.bucketSite, bid, d);
   if (!DataValidation.allNotUndefined(pid, bid, dir, d)) {
     res.status(statusCode.NotFound).send({
       message: "Require: pid, bid, dir, d",
@@ -318,7 +332,13 @@ router.put("/rm", async (req, res) => {
     return;
   }
   try {
-    fse.removeSync(path.join(Config.bucketSite, bid, d));
+    if (!fs.existsSync(currentDir)) {
+      res.status(statusCode.NotFound).send({
+        message: "Not Found"
+      });
+      return;
+    }
+    fse.removeSync(currentDir);
   } catch (e) {
     res.status(StatusCode.InternalServerError).send({
       message: "Internal Server Error",
@@ -334,6 +354,46 @@ router.put("/rm", async (req, res) => {
  */
 router.get("/download", async (req, res) => {
   const { pid, bid, f } = req.query;
+  let currentDir = path.join(Config.bucketSite, bid, f);
+  if (!DataValidation.allNotUndefined(pid, bid, f)) {
+    res.status(statusCode.NotFound).send({
+      message: "Not Found"
+    });
+    return;
+  }
+  try {
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
+    let bucketData = (await admin.firestore().collection("buckets").doc(bid).get()).data();
+    if (!bucketData["isPublic"]) {
+      res.status(statusCode.NotFound).send({
+        message: "Bucket [" + bid + "] is not public"
+      });
+      return;
+    }
+    if (!fs.existsSync(currentDir)) {
+      res.status(statusCode.NotFound).send({
+        message: "Not Found"
+      });
+      return;
+    }
+    let items = fs.readdirSync(currentDir);
+    let folders = items.filter((f) => fs.statSync(f).isDirectory());
+    res.status(statusCode.Ok).send({
+      message: "OK"
+    }).download(currentDir, (err) => {
+
+      res.status(statusCode.RequestTimeout).send({
+        ...err
+      });
+
+    })
+  } catch (error) {
+    res.status(statusCode.InternalServerError).send({
+      ...error
+    });
+  }
 });
 
 // Zip, Unzip, Download-job are the worker jobs
