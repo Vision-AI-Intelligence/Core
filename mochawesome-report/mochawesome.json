@@ -5,9 +5,9 @@
     "passes": 0,
     "pending": 0,
     "failures": 0,
-    "start": "2020-09-24T02:33:55.906Z",
-    "end": "2020-09-24T02:33:55.910Z",
-    "duration": 4,
+    "start": "2020-09-24T04:18:04.768Z",
+    "end": "2020-09-24T04:18:04.770Z",
+    "duration": 2,
     "testsRegistered": 12,
     "passPercent": 0,
     "pendingPercent": 0,
@@ -18,7 +18,7 @@
   },
   "results": [
     {
-      "uuid": "ce3a5b71-b656-45fa-bdef-3e7e778fbbd2",
+      "uuid": "3adbe968-e898-44af-a8ca-3eb326c0a144",
       "title": "",
       "fullFile": "",
       "file": "",
@@ -34,9 +34,9 @@
           "fail": false,
           "pending": false,
           "context": null,
-          "code": "config.bypass = true;\nconfig.bucketTemp = \"./test/sim/temp\";\nconfig.bucketSite = \"./test/sim/server\";",
+          "code": "config.bypass = true;\nconfig.bucketTemp = \"./test/sim/temp\";\nconfig.bucketSite = \"./test/sim/server\";\nif (!fs.existsSync(config.bucketSite + \"/dummy-bucket-001\")) {\n  fs.mkdirSync(config.bucketSite + \"/dummy-bucket-001\");\n}",
           "err": {},
-          "uuid": "34be36c9-76ca-4370-b408-6933402968a1",
+          "uuid": "4f1ab6b7-215c-4e2e-a1e1-89991566d9ed",
           "parentUUID": null,
           "isHook": true,
           "skipped": false
@@ -54,7 +54,7 @@
           "context": null,
           "code": "config.bypass = true;\nconfig.bucketTemp = \"./test/sim/temp\";\nconfig.bucketSite = \"./test/sim/server\";",
           "err": {},
-          "uuid": "6f6c46a7-daf7-4a01-94d2-460a30972d5b",
+          "uuid": "c2688052-2ddd-4d27-a37d-eae2acf014e0",
           "parentUUID": null,
           "isHook": true,
           "skipped": false
@@ -72,7 +72,7 @@
           "context": null,
           "code": "config.bypass = true;",
           "err": {},
-          "uuid": "931814d4-bbae-4e84-ac83-a1ded4df4e95",
+          "uuid": "e320e96e-b88f-4d50-b452-cdbf7f5cfed1",
           "parentUUID": null,
           "isHook": true,
           "skipped": false
@@ -82,7 +82,7 @@
       "tests": [],
       "suites": [
         {
-          "uuid": "83a20092-4f3c-40e9-8d01-26fef1835ea0",
+          "uuid": "86865e23-2b96-469d-a11e-378e0d31af99",
           "title": "Test Data Validation",
           "fullFile": "D:\\Repos\\VideoIntelligence\\Core\\test\\misc\\DataValidation.test.js",
           "file": "\\test\\misc\\DataValidation.test.js",
@@ -102,7 +102,7 @@
               "context": null,
               "code": "let obj = {\n  a: 1,\n  b: 3.14,\n  c: \"Hello World\",\n};\nassert.equal(DataValidation.allNotUndefined(obj.a, obj.b, obj.c), true);",
               "err": {},
-              "uuid": "b8eac5e2-241c-4768-8942-1fe5990b624d",
+              "uuid": "c05712ca-7232-4f77-9b18-0f0f4978e599",
               "parentUUID": null,
               "isHook": false,
               "skipped": true
@@ -120,7 +120,7 @@
               "context": null,
               "code": "let obj = {\n  a: 1,\n  b: 3.14,\n  c: \"Hello World\",\n};\nassert.equal(\n  DataValidation.allNotUndefined(obj.a, obj.b, obj.c, obj.d),\n  false\n);",
               "err": {},
-              "uuid": "2913b334-ead4-492c-ac45-cdee9dbd7282",
+              "uuid": "d45abfac-5e3f-4008-80d2-0e97f2db97b8",
               "parentUUID": null,
               "isHook": false,
               "skipped": true
@@ -131,8 +131,8 @@
           "failures": [],
           "pending": [],
           "skipped": [
-            "b8eac5e2-241c-4768-8942-1fe5990b624d",
-            "2913b334-ead4-492c-ac45-cdee9dbd7282"
+            "c05712ca-7232-4f77-9b18-0f0f4978e599",
+            "d45abfac-5e3f-4008-80d2-0e97f2db97b8"
           ],
           "duration": 0,
           "root": false,
@@ -140,7 +140,7 @@
           "_timeout": 10000
         },
         {
-          "uuid": "1ec24ac0-9b63-44e4-a560-bbcd252ea288",
+          "uuid": "1ddd12e3-b303-47c7-9ed5-720e0757ce55",
           "title": "bucket.jobs",
           "fullFile": "D:\\Repos\\VideoIntelligence\\Core\\test\\v1\\bucket.jobs.test.js",
           "file": "\\test\\v1\\bucket.jobs.test.js",
@@ -160,7 +160,7 @@
               "context": null,
               "code": "bucket.queue.downloadJob.add({\n  url:\n    \"https://archive.ics.uci.edu/ml/machine-learning-databases/00366/AReM.zip\",\n  bid: \"dummy-bucket-001\",\n  des: \"/dataset.tgz\" + Date.now(),\n});",
               "err": {},
-              "uuid": "66bc32d7-c9ed-41a9-b46f-29fab8369065",
+              "uuid": "945a9eec-ff5f-452b-b058-921878158669",
               "parentUUID": null,
               "isHook": false,
               "skipped": true
@@ -178,7 +178,7 @@
               "context": null,
               "code": "let job = await bucket.queue.zip.add({\n  dir: \"./test/sim/client/demoFolder\",\n  output: \"./test/sim/server/dummy-bucket-001/a.zip\",\n});\njob.isCompleted().then(() => console.log(\"Completed\"));\nconsole.log(\"Done\");",
               "err": {},
-              "uuid": "172fea95-09d8-48a2-b776-bf842c70bb77",
+              "uuid": "def3a13e-d4ee-4058-8aa4-471f86771eda",
               "parentUUID": null,
               "isHook": false,
               "skipped": true
@@ -189,8 +189,8 @@
           "failures": [],
           "pending": [],
           "skipped": [
-            "66bc32d7-c9ed-41a9-b46f-29fab8369065",
-            "172fea95-09d8-48a2-b776-bf842c70bb77"
+            "945a9eec-ff5f-452b-b058-921878158669",
+            "def3a13e-d4ee-4058-8aa4-471f86771eda"
           ],
           "duration": 0,
           "root": false,
@@ -198,7 +198,7 @@
           "_timeout": 10000
         },
         {
-          "uuid": "69a74e2b-6bee-42cd-b4b4-f66834265cd9",
+          "uuid": "bd26d46b-892d-4041-81d9-39ca859cd702",
           "title": "v1/bucket",
           "fullFile": "D:\\Repos\\VideoIntelligence\\Core\\test\\v1\\bucket.route.test.js",
           "file": "\\test\\v1\\bucket.route.test.js",
@@ -216,7 +216,7 @@
               "context": null,
               "code": "// Create dummy project\nawait admin\n  .firestore()\n  .collection(\"projects\")\n  .doc(\"dummy-0001\")\n  .set({\n    name: \"Dummy project\",\n    description: \"This is the description\",\n    ownerId: \"12345\",\n    buckets: [\"dummy-bucket-001\"],\n  });\nawait admin.firestore().collection(\"buckets\").doc(\"dummy-bucket-001\").set({\n  bid: \"dummy-bucket-001\",\n  size: 9999999,\n  remain: 999999,\n});\nconsole.log(\"Created dummy project\");",
               "err": {},
-              "uuid": "2d503d53-3c4c-4fb5-8385-c3fe9ff35f33",
+              "uuid": "0d5858d8-b351-47d5-8950-4951b4581942",
               "parentUUID": null,
               "isHook": true,
               "skipped": false
@@ -236,7 +236,7 @@
               "context": null,
               "code": "fs.rmdirSync(config.bucketTemp, { recursive: true });\nfs.rmdirSync(path.join(config.bucketSite, \"dummy-bucket-001\"), {\n  recursive: true,\n});\nrequester.close();\n// Delete dummy project\nawait admin.firestore().collection(\"projects\").doc(\"dummy-0001\").delete();\nawait admin\n  .firestore()\n  .collection(\"buckets\")\n  .doc(\"dummy-bucket-001\")\n  .delete();",
               "err": {},
-              "uuid": "7003123d-ec5a-4130-bf73-e2666b13b257",
+              "uuid": "cb923fbf-c9ad-4322-8c04-2503770a4d02",
               "parentUUID": null,
               "isHook": true,
               "skipped": false
@@ -256,7 +256,7 @@
               "context": null,
               "code": "requester\n  .post(\n    \"/v1/bucket/upload?dummyUid=12345&dummyEmail=teo@gmail.com&pid=dummy-0001&bid=dummy-bucket-001&d=/\"\n  )\n  .set(\"Content-Type\", \"application/x-www-form-urlencoded\")\n  .attach(\"file\", \"./test/sim/client/test01.txt\")\n  .end((err, res) => {\n    if (err) {\n      console.log(err);\n    }\n    assert.equal(\n      fs.existsSync(\"./test/sim/server/dummy-bucket-001/test01.txt\"),\n      true\n    );\n  });",
               "err": {},
-              "uuid": "baee1ce5-5c78-4be8-9639-0d81746b690d",
+              "uuid": "d501a775-e427-4f4e-bd27-c6aef2f5b6f1",
               "parentUUID": null,
               "isHook": false,
               "skipped": true
@@ -267,7 +267,7 @@
           "failures": [],
           "pending": [],
           "skipped": [
-            "baee1ce5-5c78-4be8-9639-0d81746b690d"
+            "d501a775-e427-4f4e-bd27-c6aef2f5b6f1"
           ],
           "duration": 0,
           "root": false,
@@ -275,7 +275,7 @@
           "_timeout": 10000
         },
         {
-          "uuid": "f48c7601-167f-418c-bbaa-42e6cb44fed6",
+          "uuid": "7b517ba0-7da4-409e-86b9-3f47fc018f22",
           "title": "v1/projects",
           "fullFile": "D:\\Repos\\VideoIntelligence\\Core\\test\\v1\\projects.route.test.js",
           "file": "\\test\\v1\\projects.route.test.js",
@@ -293,7 +293,7 @@
               "context": null,
               "code": "// Create dummy project\nawait admin.firestore().collection(\"projects\").doc(\"dummy-0001\").set({\n  name: \"Dummy project\",\n  description: \"This is the description\",\n  ownerId: \"12345\",\n});\nconsole.log(\"Created dummy project\");",
               "err": {},
-              "uuid": "95b5a27d-a909-4839-9b1b-ca303842605e",
+              "uuid": "642a0434-cafa-43c5-a83d-9467238dc912",
               "parentUUID": null,
               "isHook": true,
               "skipped": false
@@ -313,7 +313,7 @@
               "context": null,
               "code": "requester.close();\n// Delete dummy project\nawait admin.firestore().collection(\"projects\").doc(\"dummy-0001\").delete();\nawait admin.firestore().collection(\"projects\").doc(\"PROJECT-01\").delete();\nconsole.log(\"Deleted dummy project\\n\");",
               "err": {},
-              "uuid": "c3e7bb07-1230-4b40-99b0-ab9615d36590",
+              "uuid": "e710c7a7-1d43-4a38-a743-7209571d3a14",
               "parentUUID": null,
               "isHook": true,
               "skipped": false
@@ -333,7 +333,7 @@
               "context": null,
               "code": "requester\n  .get(\"/v1/projects\")\n  .set(\"content-type\", \"application/json\")\n  .send({\n    dummy: {\n      uid: \"12345\",\n      email: \"Nguyen Van Teo\",\n    },\n  })\n  .end((err, res) => {\n    const { projects } = res.body;\n    res.should.has.status(200);\n    assert.notEqual(projects.length, 0);\n    console.log(projects);\n    done();\n  });",
               "err": {},
-              "uuid": "ccb264c8-6caf-4966-ad98-b4b4a371d26a",
+              "uuid": "0031dee8-97d7-4e5e-9d0a-1c8334f456c0",
               "parentUUID": null,
               "isHook": false,
               "skipped": true
@@ -351,7 +351,7 @@
               "context": null,
               "code": "requester\n  .post(\"/v1/projects\")\n  .set(\"content-type\", \"application/json\")\n  .send({\n    dummy: {\n      uid: \"12345\",\n      email: \"Nguyen Van Teo\",\n    },\n    name: \"Project 01\",\n    description: \"Description 01\",\n  })\n  .end((err, res) => {\n    res.should.has.status(404);\n    done();\n  });",
               "err": {},
-              "uuid": "dabfc504-2764-430a-a420-84a6e5f4f143",
+              "uuid": "1dad877d-29d7-48fa-bcb9-9c26d3239a70",
               "parentUUID": null,
               "isHook": false,
               "skipped": true
@@ -369,7 +369,7 @@
               "context": null,
               "code": "requester\n  .post(\"/v1/projects\")\n  .set(\"content-type\", \"application/json\")\n  .send({\n    dummy: {\n      uid: \"12345\",\n      email: \"Nguyen Van Teo\",\n    },\n    id: \"PROJECT-01\",\n    name: \"Project 01\",\n    description: \"Description 01\",\n  })\n  .end((err, res) => {\n    assert.equal(res.status, 201);\n    done();\n  });",
               "err": {},
-              "uuid": "3f2f058f-0c5c-4b26-9d93-39c4c1b8e0da",
+              "uuid": "f64f392f-e7cc-4204-a669-88db9004eb98",
               "parentUUID": null,
               "isHook": false,
               "skipped": true
@@ -387,7 +387,7 @@
               "context": null,
               "code": "requester\n  .put(\"/v1/projects\")\n  .set(\"content-type\", \"application/json\")\n  .send({\n    dummy: {\n      uid: \"12345\",\n      email: \"Nguyen Van Teo\",\n    },\n    pid: \"dummy-0001\",\n    name: \"Project XXX\",\n    description: \"Description XXX\",\n  })\n  .then(async function (res) {\n    expect(res.status).to.equal(200);\n    let projectDoc = await admin\n      .firestore()\n      .collection(\"projects\")\n      .doc(\"dummy-0001\")\n      .get();\n    let data = projectDoc.data();\n    expect(data).to.has.property(\"name\", \"Project XXX\");\n    done();\n  });",
               "err": {},
-              "uuid": "27caa202-c98c-4d59-806d-ac7a996aa959",
+              "uuid": "9de54f5b-2d42-4923-829d-7e369b009235",
               "parentUUID": null,
               "isHook": false,
               "skipped": true
@@ -405,7 +405,7 @@
               "context": null,
               "code": "requester\n  .put(\"/v1/projects\")\n  .set(\"content-type\", \"application/json\")\n  .send({\n    dummy: {\n      uid: \"12345\",\n      email: \"Nguyen Van Teo\",\n    },\n    name: \"Project XXX\",\n    description: \"Description XXX\",\n  })\n  .end((err, res) => {\n    expect(res.status).to.equal(404);\n  });",
               "err": {},
-              "uuid": "2950418c-419f-4e12-a5f0-8943427d029f",
+              "uuid": "de7853e3-5f61-42e7-a412-7d3fa5185e76",
               "parentUUID": null,
               "isHook": false,
               "skipped": true
@@ -423,7 +423,7 @@
               "context": null,
               "code": "requester\n  .delete(\"/v1/projects?pid=PROJECT-XXXXXXXXXX\")\n  .send({\n    dummy: {\n      uid: \"12345\",\n      email: \"Nguyen Van Teo\",\n    },\n  })\n  .end((err, res) => {\n    expect(res.status).to.equal(404);\n  });",
               "err": {},
-              "uuid": "bf8b5376-5bbb-428b-9365-8a14331e2af1",
+              "uuid": "b18e3471-fa54-4093-b18e-73d58390aa64",
               "parentUUID": null,
               "isHook": false,
               "skipped": true
@@ -441,7 +441,7 @@
               "context": null,
               "code": "requester\n  .delete(\"/v1/projects?pid=dummy-0001\")\n  .send({\n    dummy: {\n      uid: \"12345\",\n      email: \"Nguyen Van Teo\",\n    },\n  })\n  .end(async (err, res) => {\n    let doc = await admin\n      .firestore()\n      .collection(\"projects\")\n      .doc(\"dummy-0001\")\n      .get();\n    let d = doc.data();\n    expect((await doc).exists).to.equal(false);\n    done();\n  });",
               "err": {},
-              "uuid": "7400d0cb-cc32-43dd-a90d-aece19f69cc6",
+              "uuid": "5b5ffd3e-401d-4980-b1b6-14605fabc0d7",
               "parentUUID": null,
               "isHook": false,
               "skipped": true
@@ -452,13 +452,13 @@
           "failures": [],
           "pending": [],
           "skipped": [
-            "ccb264c8-6caf-4966-ad98-b4b4a371d26a",
-            "dabfc504-2764-430a-a420-84a6e5f4f143",
-            "3f2f058f-0c5c-4b26-9d93-39c4c1b8e0da",
-            "27caa202-c98c-4d59-806d-ac7a996aa959",
-            "2950418c-419f-4e12-a5f0-8943427d029f",
-            "bf8b5376-5bbb-428b-9365-8a14331e2af1",
-            "7400d0cb-cc32-43dd-a90d-aece19f69cc6"
+            "0031dee8-97d7-4e5e-9d0a-1c8334f456c0",
+            "1dad877d-29d7-48fa-bcb9-9c26d3239a70",
+            "f64f392f-e7cc-4204-a669-88db9004eb98",
+            "9de54f5b-2d42-4923-829d-7e369b009235",
+            "de7853e3-5f61-42e7-a412-7d3fa5185e76",
+            "b18e3471-fa54-4093-b18e-73d58390aa64",
+            "5b5ffd3e-401d-4980-b1b6-14605fabc0d7"
           ],
           "duration": 0,
           "root": false,

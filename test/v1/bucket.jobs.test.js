@@ -10,7 +10,9 @@ before(() => {
   config.bypass = true;
   config.bucketTemp = "./test/sim/temp";
   config.bucketSite = "./test/sim/server";
-  fs.mkdirSync(config.bucketSite + "/dummy-bucket-001");
+  if (!fs.existsSync(config.bucketSite + "/dummy-bucket-001")) {
+    fs.mkdirSync(config.bucketSite + "/dummy-bucket-001");
+  }
 });
 describe("bucket.jobs", () => {
   it("Download file successful", async () => {
