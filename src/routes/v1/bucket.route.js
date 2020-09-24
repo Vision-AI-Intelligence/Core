@@ -363,6 +363,9 @@ router.get("/download", async (req, res) => {
     return;
   }
   try {
+    if (!fs.existsSync(path.join(Config.bucketTemp, bid))) {
+      fs.mkdirSync(path.join(Config.bucketTemp, bid));
+    }
     if (!checkProjectPerm(res, pid, req.user.uid)) {
       return;
     }
@@ -396,17 +399,23 @@ router.get("/download", async (req, res) => {
     } else if (stats.isDirectory()) {
       let zipFolder = await bucketQueue.queue.zip.add({
         dir: destDir, // from server
-        output: currentDir // to client
+        output: currentDir, // to client
       });
-      zipFolder.isCompleted().then(() => {
-        res.status(statusCode.OK).send({
-          message: "OK"
-        }).download(zipFolder, (err) => {
-          res.status(statusCode.RequestTimeout).send({
-            ...err
+      let downloadCompleted = await zipFolder.isCompleted();
+      if (downloadCompleted) {
+        res
+          .status(statusCode.OK)
+          .send({
+            message: "OK",
+          })
+          .download(currentDir, (err) => {
+            res.status(statusCode.RequestTimeout).send({
+              ...err,
+            });
           });
-        })
-      });
+        return;
+      }
+      throw new Error("Cannot download this folder");
     }
   } catch (error) {
     res.status(statusCode.InternalServerError).send({

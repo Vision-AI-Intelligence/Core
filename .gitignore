@@ -3,3 +3,4 @@ key.json
 log.txt
 /test/sim/server
 /buckets
+/mochawesome-report

@@ -26,7 +26,7 @@ app.use("/v1/dashboard/jobs", UI);
 // End of routes assignement zone
 
 app.listen(config.port, config.host, () => {
-  console.log("Server is runnning");
+  console.log("Server is running");
 });
 
 module.exports = app;
