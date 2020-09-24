@@ -354,7 +354,8 @@ router.put("/rm", async (req, res) => {
  */
 router.get("/download", async (req, res) => {
   const { pid, bid, f } = req.query;
-  let currentDir = path.join(Config.bucketSite, bid, f);
+  let currentDir = path.join(Config.bucketTemp, bid, f);
+  let destDir = path.join(Config.bucketSite, bid, f);
   if (!DataValidation.allNotUndefined(pid, bid, f)) {
     res.status(statusCode.NotFound).send({
       message: "Not Found",
@@ -374,25 +375,38 @@ router.get("/download", async (req, res) => {
       });
       return;
     }
-    if (!fs.existsSync(currentDir)) {
+    if (!fs.existsSync(destDir)) {
       res.status(statusCode.NotFound).send({
         message: "Not Found",
       });
       return;
     }
-    let stats = fs.statSync(currentDir);
+    let stats = fs.statSync(destDir);
     if (stats.isFile()) {
       res
         .status(statusCode.Ok)
         .send({
           message: "OK",
         })
-        .download(currentDir, (err) => {
+        .download(destDir, (err) => {
           res.status(statusCode.RequestTimeout).send({
             ...err,
           });
         });
     } else if (stats.isDirectory()) {
+      let zipFolder = await bucketQueue.queue.zip.add({
+        dir: destDir, // from server
+        output: currentDir // to client
+      });
+      zipFolder.isCompleted().then(() => {
+        res.status(statusCode.OK).send({
+          message: "OK"
+        }).download(zipFolder, (err) => {
+          res.status(statusCode.RequestTimeout).send({
+            ...err
+          });
+        })
+      });
     }
   } catch (error) {
     res.status(statusCode.InternalServerError).send({
