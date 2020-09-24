@@ -6,6 +6,7 @@ const { default: Axios } = require("axios");
 const fs = require("fs");
 const path = require("path");
 const { setQueues } = require("bull-board");
+const childProcess = require("child_process");
 
 const DOWNLOAD_QUEUE = "DOWNLOAD_QUEUE";
 const ZIP_QUEUE = "ZIP_QUEUE";
@@ -16,6 +17,10 @@ const downloadQueue = new Queue(DOWNLOAD_QUEUE, {
     host: Config.redisHost,
     port: Config.redisPort,
     password: Config.redisSecret,
+  },
+  settings: {
+    maxStalledCount: 2,
+    stalledInterval: 1,
   },
 });
 
@@ -52,6 +57,26 @@ const zipQueue = new Queue(ZIP_QUEUE, {
     port: Config.redisPort,
     password: Config.redisSecret,
   },
+  settings: {
+    maxStalledCount: 2,
+    stalledInterval: 1,
+  },
+});
+
+zipQueue.process((job, done) => {
+  const { dir, output } = job.data;
+  if (!DataValidation.allNotUndefined(dir, output)) {
+    done(new Error("Require directory and output"));
+    return;
+  }
+  let subprocess = childProcess.spawn("zip", [output, dir]);
+  job.progress(100);
+  subprocess.on("error", (err) => {
+    done(err);
+  });
+  subprocess.on("close", (code, signal) => {
+    done(code);
+  });
 });
 
 const unzipQueue = new Queue(UNZIP_QUEUE, {
@@ -59,6 +84,10 @@ const unzipQueue = new Queue(UNZIP_QUEUE, {
     host: Config.redisHost,
     port: Config.redisPort,
     password: Config.redisSecret,
+  },
+  settings: {
+    maxStalledCount: 2,
+    stalledInterval: 1,
   },
 });
 

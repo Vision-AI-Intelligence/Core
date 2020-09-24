@@ -17,7 +17,7 @@ before(() => {
   config.bucketSite = "./test/sim/server";
 });
 
-describe("/v1/bucket", () => {
+describe("v1/bucket", () => {
   beforeEach(async function () {
     // Create dummy project
     await admin

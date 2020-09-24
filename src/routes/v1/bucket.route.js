@@ -196,7 +196,7 @@ router.post("/upload", uploadFile.single("file"), async (req, res) => {
   try {
     if (!fs.existsSync(currentDir)) {
       res.status(statusCode.NotFound).send({
-        message: "Not Found"
+        message: "Not Found",
       });
       return;
     }
@@ -266,7 +266,7 @@ router.put("/mv", async (req, res) => {
   try {
     if (!fs.existsSync(currentDir)) {
       res.status(statusCode.NotFound).send({
-        message: "Not Found"
+        message: "Not Found",
       });
       return;
     }
@@ -301,7 +301,7 @@ router.put("/cp", async (req, res) => {
   try {
     if (!fs.existsSync(currentDir)) {
       res.status(statusCode.NotFound).send({
-        message: "Not Found"
+        message: "Not Found",
       });
       return;
     }
@@ -334,7 +334,7 @@ router.put("/rm", async (req, res) => {
   try {
     if (!fs.existsSync(currentDir)) {
       res.status(statusCode.NotFound).send({
-        message: "Not Found"
+        message: "Not Found",
       });
       return;
     }
@@ -357,7 +357,7 @@ router.get("/download", async (req, res) => {
   let currentDir = path.join(Config.bucketSite, bid, f);
   if (!DataValidation.allNotUndefined(pid, bid, f)) {
     res.status(statusCode.NotFound).send({
-      message: "Not Found"
+      message: "Not Found",
     });
     return;
   }
@@ -365,33 +365,38 @@ router.get("/download", async (req, res) => {
     if (!checkProjectPerm(res, pid, req.user.uid)) {
       return;
     }
-    let bucketData = (await admin.firestore().collection("buckets").doc(bid).get()).data();
+    let bucketData = (
+      await admin.firestore().collection("buckets").doc(bid).get()
+    ).data();
     if (!bucketData["isPublic"]) {
       res.status(statusCode.NotFound).send({
-        message: "Bucket [" + bid + "] is not public"
+        message: "Bucket [" + bid + "] is not public",
       });
       return;
     }
     if (!fs.existsSync(currentDir)) {
       res.status(statusCode.NotFound).send({
-        message: "Not Found"
+        message: "Not Found",
       });
       return;
     }
-    let items = fs.readdirSync(currentDir);
-    let folders = items.filter((f) => fs.statSync(f).isDirectory());
-    res.status(statusCode.Ok).send({
-      message: "OK"
-    }).download(currentDir, (err) => {
-
-      res.status(statusCode.RequestTimeout).send({
-        ...err
-      });
-
-    })
+    let stats = fs.statSync(currentDir);
+    if (stats.isFile()) {
+      res
+        .status(statusCode.Ok)
+        .send({
+          message: "OK",
+        })
+        .download(currentDir, (err) => {
+          res.status(statusCode.RequestTimeout).send({
+            ...err,
+          });
+        });
+    } else if (stats.isDirectory()) {
+    }
   } catch (error) {
     res.status(statusCode.InternalServerError).send({
-      ...error
+      ...error,
     });
   }
 });
