@@ -7,6 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const { setQueues } = require("bull-board");
 const childProcess = require("child_process");
+const admin = require("firebase-admin");
 
 const DOWNLOAD_QUEUE = "DOWNLOAD_QUEUE";
 const ZIP_QUEUE = "ZIP_QUEUE";
@@ -26,7 +27,31 @@ const downloadQueue = new Queue(DOWNLOAD_QUEUE, {
 
 downloadQueue.process(async function (job, done) {
   const { url, bid, des } = job.data;
+  admin
+    .firestore()
+    .collection("buckets")
+    .doc(bid)
+    .collection("jobs")
+    .doc(job.id)
+    .set({
+      id: job.id,
+      time: Date.now(),
+      type: DOWNLOAD_QUEUE,
+      status: "Pending",
+    });
   if (!DataValidation.allNotUndefined(url, des)) {
+    admin
+      .firestore()
+      .collection("buckets")
+      .doc(bid)
+      .collection("jobs")
+      .doc(job.id)
+      .set({
+        id: job.id,
+        time: Date.now(),
+        type: DOWNLOAD_QUEUE,
+        status: "Error",
+      });
     done(new Error("Url, bucket id and destination directory are required"));
     return;
   }
@@ -38,9 +63,34 @@ downloadQueue.process(async function (job, done) {
   const totalLength = headers["content-length"];
   const writer = fs.createWriteStream(path.join(Config.bucketSite, bid, des));
   writer.on("error", (err) => {
+    admin
+      .firestore()
+      .collection("buckets")
+      .doc(bid)
+      .collection("jobs")
+      .doc(job.id)
+      .set({
+        id: job.id,
+        time: Date.now(),
+        type: DOWNLOAD_QUEUE,
+        status: "Error",
+        message: err.message,
+      });
     done(err);
   });
   writer.on("close", () => {
+    admin
+      .firestore()
+      .collection("buckets")
+      .doc(bid)
+      .collection("jobs")
+      .doc(job.id)
+      .set({
+        id: job.id,
+        time: Date.now(),
+        type: DOWNLOAD_QUEUE,
+        status: "Finished",
+      });
     done();
   });
   let current = 0;
