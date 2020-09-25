@@ -433,6 +433,39 @@ router.get("/download", async (req, res) => {
  */
 router.get("/jobs", async (req, res) => {
   const { pid } = req.params;
+  try {
+    // check not null data
+    if (!DataValidation.allNotUndefined(pid)) {
+      res.status(statusCode.NotFound).send({
+        message: "Not Found"
+      });
+      return;
+    }
+    // check ownerId
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
+
+    //get array buckets by pid
+    let getBucketsId = (await admin.firestore().collection("projects").doc(pid).get("buckets")).data();
+    if (!getBucketsId.exists) {
+      console.log("Nothing in buckets");
+    }
+    let data = [];
+    for (let i = 0; i < getBucketsId.length; i++) {
+      data.push((await admin.firestore().collection("buckets").doc(getBucketsId[i]).collection("jobs").get()).docs.map((d) => {
+        return d.data();
+      }));
+    }
+    res.status(statusCode.OK).send({
+      jobs: data
+    });
+  } catch (error) {
+    res.status(statusCode.InternalServerError).send({
+      ...error
+    });
+    console.log("GET -> bucket/jobs");
+  }
 });
 
 /**
@@ -444,6 +477,32 @@ router.get("/jobs", async (req, res) => {
  */
 router.put("/zip", async (req, res) => {
   const { pid, bid, src, des } = req.body;
+  let currentDir = path.join(Config.bucketSite, bid, src);
+  let destDir = path.join(Config.bucketSite, bid, des);
+  if (!DataValidation.allNotUndefined(pid, bid, src, des)) {
+    res.status(statusCode.NotFound).send({
+      message: "Not Found"
+    });
+    return;
+  }
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
+  if (!fs.existsSync(currentDir)) {
+    res.status(statusCode.NotFound).send({
+      message: "Not Found",
+    });
+    return;
+  }
+  let job = await bucketQueue.queue.zip.add({
+    dir: currentDir,
+    output: destDir
+  });
+  if (await job.isCompleted()) {
+    res.status(statusCode.OK).send({
+      result: job // show zipped jobs to test on postman ahihi :))
+    });
+  }
 });
 
 /**
@@ -455,6 +514,40 @@ router.put("/zip", async (req, res) => {
  */
 router.put("/unzip", async (req, res) => {
   const { pid, bid, src, des } = req.body;
+  let currentDir = path.join(Config.bucketSite, bid, src);
+  let destDir = path.join(Config.bucketSite, bid, des);
+  if (!DataValidation.allNotUndefined(pid, bid, src, des)) {
+    res.status(statusCode.NotFound).send({
+      message: "Not Found"
+    });
+    return;
+  }
+  try {
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
+    if (!fs.existsSync(currentDir)) {
+      res.status(statusCode.NotFound).send({
+        message: "Not Found",
+      });
+      return;
+    }
+    let unzipItems = await bucketQueue.queue.unzip.add({
+      dir: currentDir,
+      output: destDir
+    });
+    if (await unzipItems.isCompleted()) {
+      res.status(statusCode.OK).send({
+        message: "OK"
+      });
+    }
+  } catch (error) {
+    res.status(statusCode.InternalServerError).send({
+      ...error,
+    });
+    console.log("PUT -> unzip: ", error);
+  }
+
 });
 
 /**
