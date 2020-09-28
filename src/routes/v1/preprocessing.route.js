@@ -8,16 +8,22 @@ router.use(authorization);
 /**
  * @api {GET} /v1/prep/labelling/labelmap Get label map if it existed
  */
-router.get("/labelling/labelmap", async (req, res) => {});
+router.get("/labelling/labelmap", async (req, res) => {
+  const { bid, outputDir } = req.query;
+  // outputDir: buckets/bid/{field}
+  // return labels from pbtxt
+});
 
 /**
  * @api {POST} /v1/prep/labelling/labelmap Define a label map
  */
 router.post("/labelling/labelmap", async (req, res) => {
-  const { labels } = req.body; // The list of labels
+  const { bid, labels, outputDir } = req.body; // The list of labels
 
   for (let i = 0; i < labels.length; i++) {
     const { id, name } = labels[i];
+    // convert to pbtxt JSON
+    // save to ouputDir
   }
 });
 
@@ -66,7 +72,7 @@ router.delete("/labelling/annotation", async (req, res) => {
 });
 
 /**
- * Get the labelling tool options
+ * @api {GET} /v1/prep/labelling/options Get labelling tool options
  */
 router.get("/labelling/options", async (req, res) => {});
 
