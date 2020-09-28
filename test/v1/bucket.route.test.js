@@ -11,10 +11,25 @@ let should = chai.should();
 chai.use(chaiHttp);
 
 const requester = chai.request(server).keepOpen();
-before(() => {
+before(async () => {
   config.bypass = true;
   config.bucketTemp = "./test/sim/temp";
   config.bucketSite = "./test/sim/server";
+  if (!fs.existsSync(path.join(config.bucketSite, "dummy-bucket-001"))) {
+    fs.mkdirSync(path.join(config.bucketSite, "dummy-bucket-001"));
+  }
+  fs.copyFileSync(
+    "./test/sim/materials/test01.txt",
+    path.join(config.bucketSite, "dummy-bucket-001/test01.txt")
+  );
+  await admin
+    .firestore()
+    .collection("projects")
+    .doc("dummy-project-001")
+    .set({
+      ownerId: "12345",
+      buckets: ["dummy-bucket-001"],
+    });
 });
 
 describe("v1/bucket", () => {
@@ -52,6 +67,15 @@ describe("v1/bucket", () => {
           fs.existsSync("./test/sim/server/dummy-bucket-001/test01.txt"),
           true
         );
+      });
+  });
+  it("GET /v1/bucket/download Download file sucessful", async () => {
+    requester
+      .get(
+        "/v1/bucket/download?dummyUid=12345&dummyEmail=teo@gmail.com&pid=dummy-project-001&bid=dummy-bucket-001&f=/dummy-bucket-001/test01.txt"
+      )
+      .end((err, res) => {
+        console.log(res.header);
       });
   });
   afterEach(async function () {

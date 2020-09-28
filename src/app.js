@@ -22,6 +22,7 @@ app.use(require("./middleware/logger"));
 app.use("/v1/users", require("./routes/v1/users.route"));
 app.use("/v1/projects", require("./routes/v1/projects.route"));
 app.use("/v1/bucket", require("./routes/v1/bucket.route"));
+app.use("/v1/prep", require("./routes/v1/preprocessing.route"));
 app.use("/v1/dashboard/jobs", UI);
 // End of routes assignement zone
 
