@@ -53,6 +53,16 @@ router.post("/labelling/annotation", async (req, res) => {
     // bndbox.xmax;
     // bndbox.ymax;
   }
+
+  // Ref: https://medium.com/towards-artificial-intelligence/understanding-coco-and-pascal-voc-annotations-for-object-detection-bb8ffbbb36e3
+  // write the annotation file by the structure defined in the link above
+});
+
+/**
+ * @api {DELETE} /v1/prep/labelling/annotation Delete annotation of a file
+ */
+router.delete("/labelling/annotation", async (req, res) => {
+  const { bid, folder, filename } = req.query;
 });
 
 /**

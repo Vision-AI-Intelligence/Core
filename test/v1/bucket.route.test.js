@@ -32,7 +32,7 @@ before(async () => {
     });
 });
 
-describe("v1/bucket", () => {
+describe("v1/bucket", async function () {
   beforeEach(async function () {
     // Create dummy project
     await admin
@@ -52,7 +52,7 @@ describe("v1/bucket", () => {
     });
     console.log("Created dummy project");
   });
-  it("POST /v1/bucket/upload Sucessful", async () => {
+  it("POST /v1/bucket/upload Sucessful", async function () {
     requester
       .post(
         "/v1/bucket/upload?dummyUid=12345&dummyEmail=teo@gmail.com&pid=dummy-0001&bid=dummy-bucket-001&d=/"
@@ -69,7 +69,7 @@ describe("v1/bucket", () => {
         );
       });
   });
-  it("GET /v1/bucket/download Download file sucessful", async () => {
+  it("GET /v1/bucket/download Download file sucessful", async function () {
     requester
       .get(
         "/v1/bucket/download?dummyUid=12345&dummyEmail=teo@gmail.com&pid=dummy-project-001&bid=dummy-bucket-001&f=/dummy-bucket-001/test01.txt"
