@@ -1,15 +1,9 @@
-const chai = require("chai");
-const chaiHttp = require("chai-http");
 const server = require("../../src/app");
 const admin = require("firebase-admin");
 const config = require("../../src/config");
-const { assert, expect } = require("chai");
-let should = chai.should();
 
-chai.use(chaiHttp);
-
-const requester = chai.request(server).keepOpen();
-before(() => {
+const requester = require("supertest")(server);
+beforeAll(() => {
   config.bypass = true;
 });
 
@@ -24,7 +18,7 @@ describe("v1/projects", function () {
     console.log("Created dummy project");
   });
 
-  it("GET", function (done) {
+  it("GET", function () {
     requester
       .get("/v1/projects")
       .set("content-type", "application/json")
@@ -36,14 +30,13 @@ describe("v1/projects", function () {
       })
       .end((err, res) => {
         const { projects } = res.body;
-        res.should.has.status(200);
-        assert.notEqual(projects.length, 0);
+        expect(res.status).toBe(200);
+        expect(projects.length).not.toBe(0);
         console.log(projects);
-        done();
       });
   });
 
-  it("POST with error", function (done) {
+  it("POST with error", function () {
     requester
       .post("/v1/projects")
       .set("content-type", "application/json")
@@ -56,12 +49,11 @@ describe("v1/projects", function () {
         description: "Description 01",
       })
       .end((err, res) => {
-        res.should.has.status(404);
-        done();
+        expect(res.status).toBe(404);
       });
   });
 
-  it("POST without error", function (done) {
+  it("POST without error", function () {
     requester
       .post("/v1/projects")
       .set("content-type", "application/json")
@@ -75,12 +67,11 @@ describe("v1/projects", function () {
         description: "Description 01",
       })
       .end((err, res) => {
-        assert.equal(res.status, 201);
-        done();
+        expect(res.status).toBe(201);
       });
   });
 
-  it("PUT without error", function (done) {
+  it("PUT without error", function () {
     requester
       .put("/v1/projects")
       .set("content-type", "application/json")
@@ -94,15 +85,14 @@ describe("v1/projects", function () {
         description: "Description XXX",
       })
       .then(async function (res) {
-        expect(res.status).to.equal(200);
+        expect(res.status).toBe(200);
         let projectDoc = await admin
           .firestore()
           .collection("projects")
           .doc("dummy-0001")
           .get();
         let data = projectDoc.data();
-        expect(data).to.has.property("name", "Project XXX");
-        done();
+        expect(data.name).toBe("Project XXX");
       });
   });
 
@@ -119,7 +109,7 @@ describe("v1/projects", function () {
         description: "Description XXX",
       })
       .end((err, res) => {
-        expect(res.status).to.equal(404);
+        expect(res.status).toBe(404);
       });
   });
 
@@ -133,11 +123,11 @@ describe("v1/projects", function () {
         },
       })
       .end((err, res) => {
-        expect(res.status).to.equal(404);
+        expect(res.status).toBe(404);
       });
   });
 
-  it("DELETE existed project", function (done) {
+  it("DELETE existed project", function () {
     requester
       .delete("/v1/projects?pid=dummy-0001")
       .send({
@@ -153,13 +143,11 @@ describe("v1/projects", function () {
           .doc("dummy-0001")
           .get();
         let d = doc.data();
-        expect((await doc).exists).to.equal(false);
-        done();
+        expect((await doc).exists).toBe(false);
       });
   });
 
-  after(async function () {
-    requester.close();
+  afterAll(async function () {
     // Delete dummy project
     await admin.firestore().collection("projects").doc("dummy-0001").delete();
     await admin.firestore().collection("projects").doc("PROJECT-01").delete();
