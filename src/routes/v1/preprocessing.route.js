@@ -2,7 +2,8 @@ const router = require("express").Router();
 const admin = require("firebase-admin");
 const authorization = require("../../middleware/authorization");
 const fs = require("fs");
-
+const DataValidation = require("../../misc/DataValidation");
+const statusCode = require("../../misc/StatusCode");
 router.use(authorization);
 
 /**
@@ -12,6 +13,29 @@ router.get("/labelling/labelmap", async (req, res) => {
   const { bid, outputDir } = req.query;
   // outputDir: buckets/bid/{field}
   // return labels from pbtxt
+  if (!DataValidation.allNotUndefined(bid, outputDir)) {
+    res.status(statusCode.NotFound).send({
+      message: "Not Found"
+    });
+    return;
+  }
+  try {
+    let checkExistedLabelmap = await admin.firestore().collection("buckets").doc(bid).get();
+    if (!checkExistedLabelmap.exists) {
+      res.status(statusCode.NotFound).send({
+        message: "Not Found"
+      });
+      return;
+    }
+    res.status(statusCode.OK).send({
+      data: checkExistedLabelmap[outputDir]
+    });
+  } catch (error) {
+    res.status(statusCode.InternalServerError).send({
+      ...error
+    });
+    console.log("GET -> labelmap: ", error);
+  }
 });
 
 /**
@@ -19,12 +43,20 @@ router.get("/labelling/labelmap", async (req, res) => {
  */
 router.post("/labelling/labelmap", async (req, res) => {
   const { bid, labels, outputDir } = req.body; // The list of labels
-
+  let data = []
   for (let i = 0; i < labels.length; i++) {
     const { id, name } = labels[i];
     // convert to pbtxt JSON
     // save to ouputDir
+
+    let pbtxt = "";
+    pbtxt += "{item {\n\tname:\""
+      + name
+      + "\"\n\tid:" + id
+      + "\n}}\n"
+    data.push(pbtxt);
   }
+  await admin.firestore().collection("buckets").doc(bid).set(data);
 });
 
 /**
@@ -74,7 +106,7 @@ router.delete("/labelling/annotation", async (req, res) => {
 /**
  * @api {GET} /v1/prep/labelling/options Get labelling tool options
  */
-router.get("/labelling/options", async (req, res) => {});
+router.get("/labelling/options", async (req, res) => { });
 
 /**
  * @api {POST} /v1/prep/labeling/options Set options for labelling tool
