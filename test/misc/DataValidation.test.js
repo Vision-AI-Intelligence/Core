@@ -1,6 +1,3 @@
-const { assert } = require("chai");
-const chai = require("chai");
-const should = chai.should();
 const DataValidation = require("../../src/misc/DataValidation");
 describe("Test Data Validation", () => {
   it("Should return true", () => {
@@ -9,7 +6,7 @@ describe("Test Data Validation", () => {
       b: 3.14,
       c: "Hello World",
     };
-    assert.equal(DataValidation.allNotUndefined(obj.a, obj.b, obj.c), true);
+    expect(DataValidation.allNotUndefined(obj.a, obj.b, obj.c)).toBe(true);
   });
   it("Should return false", () => {
     let obj = {
@@ -17,8 +14,7 @@ describe("Test Data Validation", () => {
       b: 3.14,
       c: "Hello World",
     };
-    assert.equal(
-      DataValidation.allNotUndefined(obj.a, obj.b, obj.c, obj.d),
+    expect(DataValidation.allNotUndefined(obj.a, obj.b, obj.c, obj.d)).toBe(
       false
     );
   });

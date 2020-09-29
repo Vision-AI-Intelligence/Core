@@ -9,6 +9,22 @@ const { setQueues } = require("bull-board");
 const childProcess = require("child_process");
 const admin = require("firebase-admin");
 
+function jobLogging(bid, jobId, type, status, message) {
+  admin
+    .firestore()
+    .collection("buckets")
+    .doc(bid)
+    .collection("jobs")
+    .doc(jobId)
+    .set({
+      id: jobId,
+      time: Date.now(),
+      type: type,
+      status: status,
+      message: message,
+    });
+}
+
 const DOWNLOAD_QUEUE = "DOWNLOAD_QUEUE";
 const ZIP_QUEUE = "ZIP_QUEUE";
 const UNZIP_QUEUE = "UNZIP_QUEUE";
@@ -27,31 +43,9 @@ const downloadQueue = new Queue(DOWNLOAD_QUEUE, {
 
 downloadQueue.process(async function (job, done) {
   const { url, bid, des } = job.data;
-  admin
-    .firestore()
-    .collection("buckets")
-    .doc(bid)
-    .collection("jobs")
-    .doc(job.id)
-    .set({
-      id: job.id,
-      time: Date.now(),
-      type: DOWNLOAD_QUEUE,
-      status: "Pending",
-    });
+  jobLogging(bid, job.id, DOWNLOAD_QUEUE, "Pending", "");
   if (!DataValidation.allNotUndefined(url, des)) {
-    admin
-      .firestore()
-      .collection("buckets")
-      .doc(bid)
-      .collection("jobs")
-      .doc(job.id)
-      .set({
-        id: job.id,
-        time: Date.now(),
-        type: DOWNLOAD_QUEUE,
-        status: "Error",
-      });
+    jobLogging(bid, job.id, DOWNLOAD_QUEUE, "Error", "");
     done(new Error("Url, bucket id and destination directory are required"));
     return;
   }
@@ -63,34 +57,11 @@ downloadQueue.process(async function (job, done) {
   const totalLength = headers["content-length"];
   const writer = fs.createWriteStream(path.join(Config.bucketSite, bid, des));
   writer.on("error", (err) => {
-    admin
-      .firestore()
-      .collection("buckets")
-      .doc(bid)
-      .collection("jobs")
-      .doc(job.id)
-      .set({
-        id: job.id,
-        time: Date.now(),
-        type: DOWNLOAD_QUEUE,
-        status: "Error",
-        message: err.message,
-      });
+    jobLogging(bid, job.id, DOWNLOAD_QUEUE, "Error", err.message);
     done(err);
   });
   writer.on("close", () => {
-    admin
-      .firestore()
-      .collection("buckets")
-      .doc(bid)
-      .collection("jobs")
-      .doc(job.id)
-      .set({
-        id: job.id,
-        time: Date.now(),
-        type: DOWNLOAD_QUEUE,
-        status: "Finished",
-      });
+    jobLogging(bid, job.id, DOWNLOAD_QUEUE, "Finished", "");
     done();
   });
   let current = 0;
@@ -114,17 +85,20 @@ const zipQueue = new Queue(ZIP_QUEUE, {
 });
 
 zipQueue.process((job, done) => {
-  const { dir, output } = job.data;
+  const { bid, dir, output } = job.data;
   if (!DataValidation.allNotUndefined(dir, output)) {
     done(new Error("Require directory and output"));
     return;
   }
+  jobLogging(bid, job.id, ZIP_QUEUE, "Pending", "");
   let subprocess = childProcess.spawn("zip", [output, dir]);
   job.progress(100);
   subprocess.on("error", (err) => {
+    jobLogging(bid, job.id, ZIP_QUEUE, "Error", err.message);
     done(err);
   });
   subprocess.on("close", (code, signal) => {
+    jobLogging(bid, job.id, ZIP_QUEUE, "Finished", "");
     done(code);
   });
 });
@@ -139,6 +113,24 @@ const unzipQueue = new Queue(UNZIP_QUEUE, {
     maxStalledCount: 2,
     stalledInterval: 1,
   },
+});
+unzipQueue.process((job, done) => {
+  const { bid, dir, output } = job.data;
+  if (!DataValidation.allNotUndefined(dir, output)) {
+    done(new Error("Require directory and output"));
+    return;
+  }
+  jobLogging(bid, job.id, UNZIP_QUEUE, "Pending", "");
+  let subprocess = childProcess.spawn("unzip", [output, dir]);
+  job.progress(100);
+  subprocess.on("error", (err) => {
+    jobLogging(bid, job.id, UNZIP_QUEUE, "Error", err.message);
+    done(err);
+  });
+  subprocess.on("close", (code, signal) => {
+    jobLogging(bid, job.id, UNZIP_QUEUE, "Finished", "");
+    done(code);
+  });
 });
 
 setQueues([downloadQueue, zipQueue, unzipQueue]);
