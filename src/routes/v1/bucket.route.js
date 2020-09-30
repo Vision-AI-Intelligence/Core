@@ -175,6 +175,69 @@ router.get("/metadata", async (req, res) => {
   }
 });
 
+router.get("/options", async (req, res) => {
+  const { pid, bid } = req.query;
+  if (!DataValidation.allNotUndefined(pid, bid)) {
+    res.status(statusCode.NotFound).send({
+      message: "Not Found",
+    });
+    return;
+  }
+  try {
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
+    let bucketData = (
+      await admin.firestore().collection("buckets").doc(bid).get()
+    ).data();
+    if (!bucketData["isPublic"]) {
+      res.status(statusCode.NotFound).send({
+        message: "Not Found",
+      });
+      return;
+    }
+
+    res.status(statusCode.OK).send({
+      options: bucketData["options"],
+    });
+  } catch (error) {
+    res.status(statusCode.InternalServerError).send({
+      ...error,
+    });
+    console.log("GET -> bucket/options: ", error);
+  }
+});
+
+router.post("/options", async (req, res) => {
+  const { pid, bid, options } = req.body;
+  if (!DataValidation.allNotUndefined(pid, bid, options)) {
+    res.status(statusCode.NotFound).send({
+      message: "Not Found",
+    });
+    return;
+  }
+  try {
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
+    await admin.firestore().collection("buckets").doc(bid).set(
+      {
+        options: options,
+      },
+      { merge: true }
+    );
+
+    res.status(statusCode.OK).send({
+      message: "OK",
+    });
+  } catch (error) {
+    res.status(statusCode.InternalServerError).send({
+      ...error,
+    });
+    console.log("POST -> bucket/options: ", error);
+  }
+});
+
 /**
  * @api {POST} /v1/bucket/upload Upload a file
  * @apiParam  {String} pid Project's id
@@ -446,7 +509,7 @@ router.get("/jobs", async (req, res) => {
     // check not null data
     if (!DataValidation.allNotUndefined(pid)) {
       res.status(statusCode.NotFound).send({
-        message: "Not Found"
+        message: "Not Found",
       });
       return;
     }
@@ -456,22 +519,33 @@ router.get("/jobs", async (req, res) => {
     }
 
     //get array buckets by pid
-    let getBucketsId = (await admin.firestore().collection("projects").doc(pid).get("buckets")).data();
+    let getBucketsId = (
+      await admin.firestore().collection("projects").doc(pid).get("buckets")
+    ).data();
     if (!getBucketsId.exists) {
       console.log("Nothing in buckets");
     }
     let data = [];
     for (let i = 0; i < getBucketsId.length; i++) {
-      data.push((await admin.firestore().collection("buckets").doc(getBucketsId[i]).collection("jobs").get()).docs.map((d) => {
-        return d.data();
-      }));
+      data.push(
+        (
+          await admin
+            .firestore()
+            .collection("buckets")
+            .doc(getBucketsId[i])
+            .collection("jobs")
+            .get()
+        ).docs.map((d) => {
+          return d.data();
+        })
+      );
     }
     res.status(statusCode.OK).send({
-      jobs: data
+      jobs: data,
     });
   } catch (error) {
     res.status(statusCode.InternalServerError).send({
-      ...error
+      ...error,
     });
     console.log("GET -> bucket/jobs");
   }
@@ -490,7 +564,7 @@ router.put("/zip", async (req, res) => {
   let destDir = path.join(Config.bucketSite, bid, des);
   if (!DataValidation.allNotUndefined(pid, bid, src, des)) {
     res.status(statusCode.NotFound).send({
-      message: "Not Found"
+      message: "Not Found",
     });
     return;
   }
@@ -505,11 +579,11 @@ router.put("/zip", async (req, res) => {
   }
   let job = await bucketQueue.queue.zip.add({
     dir: currentDir,
-    output: destDir
+    output: destDir,
   });
   if (await job.isCompleted()) {
     res.status(statusCode.OK).send({
-      result: job // show zipped jobs to test on postman ahihi :))
+      result: job, // show zipped jobs to test on postman ahihi :))
     });
   }
 });
@@ -527,7 +601,7 @@ router.put("/unzip", async (req, res) => {
   let destDir = path.join(Config.bucketSite, bid, des);
   if (!DataValidation.allNotUndefined(pid, bid, src, des)) {
     res.status(statusCode.NotFound).send({
-      message: "Not Found"
+      message: "Not Found",
     });
     return;
   }
@@ -543,11 +617,11 @@ router.put("/unzip", async (req, res) => {
     }
     let unzipItems = await bucketQueue.queue.unzip.add({
       dir: currentDir,
-      output: destDir
+      output: destDir,
     });
     if (await unzipItems.isCompleted()) {
       res.status(statusCode.OK).send({
-        message: "OK"
+        message: "OK",
       });
     }
   } catch (error) {
@@ -556,7 +630,6 @@ router.put("/unzip", async (req, res) => {
     });
     console.log("PUT -> unzip: ", error);
   }
-
 });
 
 /**
@@ -568,6 +641,23 @@ router.put("/unzip", async (req, res) => {
  */
 router.put("/download-job", async (req, res) => {
   const { pid, bid, url, des } = req.body;
+  if (!DataValidation.allNotUndefined(pid, bid, url, des)) {
+    res.status(statusCode.NotFound).send({
+      message: "Require pid, bid, url, des",
+    });
+    return;
+  }
+  try {
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
+    bucketQueue.queue.downloadJob.add({ url: url, bid: bid, des: des });
+  } catch (error) {
+    res.status(statusCode.InternalServerError).send({
+      ...error,
+    });
+    console.log("PUT -> download-job ", error);
+  }
 });
 
 module.exports = router;
