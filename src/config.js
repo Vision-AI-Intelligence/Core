@@ -1,6 +1,6 @@
 module.exports = {
   port: 8081,
-  host: "127.0.0.1",
+  host: "0.0.0.0",
   log: "log.txt",
   bypass: true,
   redisHost: "103.57.220.118",
