@@ -5,6 +5,7 @@ const DataValidation = require("../../misc/DataValidation");
 const statusCode = require("../../misc/StatusCode");
 const { firestore } = require("firebase-admin");
 const similarity = require("similarity");
+const StatusCode = require("../../misc/StatusCode");
 router.use(authorization);
 
 /*
@@ -93,6 +94,15 @@ router.get("/listing", async (req, res) => {
       ...error,
     });
   }
+});
+
+/**
+ * @api {GET} /v1/users/info Get a user info
+ */
+router.get("/info", async (req, res) => {
+  const { uid } = req.query;
+  let info = await admin.auth().getUser(uid);
+  res.send(StatusCode.OK).send(info);
 });
 
 module.exports = router;
