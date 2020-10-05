@@ -4,6 +4,7 @@ const admin = require("firebase-admin");
 const DataValidation = require("../../misc/DataValidation");
 const statusCode = require("../../misc/StatusCode");
 const similarity = require("similarity");
+const StatusCode = require("../../misc/StatusCode");
 const FieldValue = admin.firestore.FieldValue;
 router.use(authorization);
 
@@ -111,7 +112,7 @@ router.put("/", async (req, res) => {
 });
 
 /*
-@api {DELETE} /v1/projects Delet the project
+@api {DELETE} /v1/projects Delete the project
 */
 router.delete("/", async (req, res) => {
   const { pid } = req.query;
@@ -154,7 +155,9 @@ router.delete("/", async (req, res) => {
 @api {POST} /v1/projects/invite Create the invitation
 */
 router.post("/invite", async (req, res) => {
-  const { pid, from, to } = req.query;
+  // WTF: from what !!!
+  // big bug !!!
+  const { pid, to } = req.query;
   try {
     if (!DataValidation.allNotUndefined(pid, from, to)) {
       res.status(statusCode.NotFound).send({
@@ -162,27 +165,33 @@ router.post("/invite", async (req, res) => {
       });
       return;
     }
+    // B1. Lấy uid của auth user
+    // B2. Kiểm tra auth user có quyền mời trên project pid hay không?
+    // B3. Mời người dùng khác
+    let projectDoc = admin.firestore().collection("projects").doc(pid);
+    if ((await projectDoc.get()).data()["ownerId"] != req.user.uid) {
+      res.status(StatusCode.Forbidden).send({
+        message: `Project [${pid}]: Permission denied`,
+      });
+      return;
+    }
+    let invitationId = Date.now();
     const message = {
-      from: from,
+      from: req.user.uid,
       to: to,
       time: Date.now().toString(),
       project: pid,
+      id: invitationId,
     };
-    await admin
-      .firestore()
-      .collection("projects")
-      .doc(pid)
-      .collection("invitation")
-      .doc()
-      .create(message);
+    await projectDoc.collection("invitation").doc(invitationId).set(message);
     // send invitation to collaborator
     await admin
       .firestore()
       .collection("users")
       .doc(to)
       .collection("invitation")
-      .doc()
-      .create(message);
+      .doc(invitationId)
+      .set(message);
 
     res.status(statusCode.OK).send({
       message: "OK",
@@ -199,6 +208,7 @@ router.post("/invite", async (req, res) => {
 @api {DELETE} /v1/projects/invite Delete the invitation
 */
 router.delete("/invite", async (req, res) => {
+  // pid is unnecessary
   const { pid, invitationId } = req.query;
   try {
     if (!DataValidation.allNotUndefined(invitationId, pid)) {
@@ -207,6 +217,33 @@ router.delete("/invite", async (req, res) => {
       });
       return;
     }
+
+    let projectDoc = admin.firestore().collection("projects").doc(pid);
+    const ownerId = (await projectDoc.get()).data();
+
+    if (ownerId !== req.user.uid) {
+      res.status(StatusCode.Forbidden).send({
+        message: `Project [${pid}]: Permission Denied`,
+      });
+      return;
+    }
+
+    let invitationDoc = admin
+      .firestore()
+      .collection("projects")
+      .doc(pid)
+      .collection("invitation")
+      .doc(invitationId);
+
+    const { from, to } = (await invitationDoc.get()).data();
+
+    if (ownerId !== from) {
+      res.status(StatusCode.BadRequest).send({
+        message: "Project owner is mismatch",
+      });
+      return;
+    }
+
     await admin
       .firestore()
       .collection("projects")
@@ -218,7 +255,7 @@ router.delete("/invite", async (req, res) => {
     await admin
       .firestore()
       .collection("users")
-      .doc(req.user.uid)
+      .doc(to)
       .collection("invitation")
       .doc(invitationId)
       .delete();
@@ -304,6 +341,7 @@ router.post("/invite/accept", async (req, res) => {
 @api {GET} /v1/projects/collaborators Get the list of collaborators
 */
 router.get("/collaborators", async (req, res) => {
+  // User permission
   const { pid } = req.body;
   try {
     if (!DataValidation.allNotUndefined(pid)) {
@@ -333,7 +371,7 @@ router.get("/collaborators", async (req, res) => {
 */
 router.delete("/collaborators", async (req, res) => {
   const { pid } = req.body;
-  let uid = req.user.uid;
+  let uid = req.user.uid; // Remove another user!!! not the owner
   try {
     if (!DataValidation.allNotUndefined(pid)) {
       res.status(statusCode.NotFound).send({
