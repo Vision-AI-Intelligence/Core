@@ -1,6 +1,6 @@
 key.json
 /node_modules
-/log.txt
+log.txt
 /test/sim/server
 /buckets
 /mochawesome-report
