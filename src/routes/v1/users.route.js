@@ -11,7 +11,7 @@ router.use(authorization);
 /*
 @api {GET} /v1/users Get the user info
 */
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
   let uid = req.user.uid;
   try {
     if (!DataValidation.allNotUndefined(uid)) {
@@ -20,7 +20,7 @@ router.get("/", (req, res) => {
       });
       return;
     }
-    let getUser = admin.firestore().collection("users").doc(uid).get();
+    let getUser = await (await admin.firestore().collection("users").doc(uid).get()).data();
     res.status(statusCode.OK).send({
       user: getUser,
     });
