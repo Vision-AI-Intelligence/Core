@@ -14,9 +14,9 @@ router.use(authorization);
 router.get("/", (req, res) => {
   let uid = req.user.uid;
   try {
-    if (DataValidation.allNotUndefined(uid)) {
+    if (!DataValidation.allNotUndefined(uid)) {
       res.status(statusCode.NotFound).send({
-        message: "Not Found",
+        message: "[" + uid + "] Not Found",
       });
       return;
     }
