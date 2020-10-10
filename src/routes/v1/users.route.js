@@ -67,25 +67,44 @@ router.post("/", async (req, res) => {
 @api {GET} /v1/users/listing Search the users by their info
 */
 router.get("/listing", async (req, res) => {
-  const { keyword } = req.body;
+  const { keyword } = req.query;
+  // console.log(keyword);
   try {
     if (!DataValidation.allNotUndefined(keyword)) {
       res.status(statusCode.NotFound).send({
         message: [],
       });
     }
-    let query = (await admin.auth().getUsers()).users;
+    // let query = (await admin.auth().getUsers()).users;
+    let query = (((await admin.auth().listUsers()).users));
     let result = [];
     for (let i = 0; i < query.length; i++) {
-      let index = similarity(keyword, query[i]["email"], { sensitive: true });
-      if (index > 0.6) {
+      let nameTokens = query[i].displayName.trim().split(' ');
+      let index = Math.max(similarity(keyword, query[i].email, { sensitive: false }), similarity(keyword, query[i].displayName, { sensitive: false }));
+      for (let nameToken of nameTokens) {
+        index = Math.max(index, similarity(keyword, nameToken, { sensitive: false }));
+      }
+      if (index > 0.4) {
         result.push({
+          si: index,
           uid: query[i].uid,
           email: query[i].email,
+          displayName: query[i].displayName,
           photoURL: query[i].photoURL,
         });
       }
+      // result.push({ email: query[i].email });
     }
+    result = result.sort((a, b) => {
+      if (a.si > b.si) {
+        return -1;
+      }
+      if (b.si > a.si) {
+        return 1;
+      }
+      return 0;
+    })
+    console.log(result);
     res.status(statusCode.OK).send({
       result: result,
     });
