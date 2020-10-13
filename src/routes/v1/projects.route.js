@@ -319,6 +319,7 @@ router.post("/invite/accept", async (req, res) => {
       .collection("invitation")
       .doc(invitationId)
       .get();
+    console.log(await getInvitation.data());
     let uid = req.user.uid;
     let invitedUser = await getInvitation.data()["to"];
     if (getInvitation.exists) {
@@ -343,12 +344,12 @@ router.post("/invite/accept", async (req, res) => {
         .collection("projects")
         .doc(pid)
         .update({
-          collaborators: FieldValue.arrayUnion(invitedUser),
+          collaborators: FieldValue.arrayUnion(getInvitation.data()["to"]),
         });
       await admin
         .firestore()
         .collection("users")
-        .doc(invitedUser)
+        .doc(getInvitation.data()["to"])
         .update({
           collaborated: FieldValue.arrayUnion(pid),
         });
@@ -393,7 +394,7 @@ router.get("/collaborators", async (req, res) => {
 @api {DELETE} /v1/projects/collaborators Remove a collaborator
 */
 router.delete("/collaborators", async (req, res) => {
-  const { pid, cid } = req.body;
+  const { pid, cid } = req.query;
   try {
     if (!DataValidation.allNotUndefined(pid, cid)) {
       res.status(statusCode.NotFound).send({
@@ -409,6 +410,14 @@ router.delete("/collaborators", async (req, res) => {
       .doc(pid)
       .update({
         collaborators: FieldValue.arrayRemove(cid),
+      });
+    // delete collaborated of user
+    await admin
+      .firestore()
+      .collection("users")
+      .doc(cid)
+      .update({
+        collaborated: FieldValue.arrayRemove(pid),
       });
     res.status(statusCode.OK).send({
       message: "OK",
