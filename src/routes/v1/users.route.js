@@ -121,7 +121,7 @@ router.get("/listing", async (req, res) => {
 router.get("/info", async (req, res) => {
   const { uid } = req.query;
   let info = await admin.auth().getUser(uid);
-  res.send(StatusCode.OK).send(info);
+  res.status(StatusCode.OK).send(info);
 });
 
 module.exports = router;
