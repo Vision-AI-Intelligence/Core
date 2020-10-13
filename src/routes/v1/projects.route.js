@@ -8,6 +8,22 @@ const StatusCode = require("../../misc/StatusCode");
 const FieldValue = admin.firestore.FieldValue;
 router.use(authorization);
 
+
+async function checkProjectPerm(res, pid, uid) {
+  let projectDoc = admin.firestore().collection("projects").doc(pid);
+  let projectData = (await projectDoc.get()).data();
+  if (projectData["ownerId"] != uid) {
+    if (!projectData["collaborators"].includes(uid)) {
+      res.status(statusCode.Forbidden).send({
+        message: "Accessing to project [" + pid + "] does not allow",
+      });
+      return false;
+    }
+  }
+  return true;
+}
+
+
 /*
 @apiName GET 
 @apiDescription Get existed projects of the user
@@ -41,6 +57,9 @@ router.post("/", async (req, res) => {
       res.status(statusCode.NotFound).send({
         message: "Not Found",
       });
+      return;
+    }
+    if (!checkProjectPerm(res, id, req.user.uid)) {
       return;
     }
     let existedProjectDoc = await admin
@@ -85,6 +104,9 @@ router.put("/", async (req, res) => {
       });
       return;
     }
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
     let checkExistedProject = await admin
       .firestore()
       .collection("projects")
@@ -123,6 +145,9 @@ router.delete("/", async (req, res) => {
       });
       return;
     }
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
     let checkPid = await admin
       .firestore()
       .collection("projects")
@@ -134,7 +159,7 @@ router.delete("/", async (req, res) => {
       });
       return;
     }
-    if (!(req.user.uid == checkPid.data["ownerID"])) {
+    if (!(req.user.uid == checkPid.data()["ownerId"])) {
       res.status(statusCode.Unauthorized).send({
         message: "Unauthorized",
       });
@@ -157,12 +182,15 @@ router.delete("/", async (req, res) => {
 router.post("/invite", async (req, res) => {
   // WTF: from what !!!
   // big bug !!!
-  const { pid, to } = req.query;
+  const { pid, from, to } = req.body;
   try {
     if (!DataValidation.allNotUndefined(pid, from, to)) {
       res.status(statusCode.NotFound).send({
         message: "Not Found",
       });
+      return;
+    }
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
       return;
     }
     // B1. Lấy uid của auth user
@@ -175,7 +203,7 @@ router.post("/invite", async (req, res) => {
       });
       return;
     }
-    let invitationId = Date.now();
+    let invitationId = Date.now().toString();
     const message = {
       from: req.user.uid,
       to: to,
@@ -219,8 +247,7 @@ router.delete("/invite", async (req, res) => {
     }
 
     let projectDoc = admin.firestore().collection("projects").doc(pid);
-    const ownerId = (await projectDoc.get()).data();
-
+    const ownerId = (await projectDoc.get()).data()["ownerId"];
     if (ownerId !== req.user.uid) {
       res.status(StatusCode.Forbidden).send({
         message: `Project [${pid}]: Permission Denied`,
@@ -236,7 +263,6 @@ router.delete("/invite", async (req, res) => {
       .doc(invitationId);
 
     const { from, to } = (await invitationDoc.get()).data();
-
     if (ownerId !== from) {
       res.status(StatusCode.BadRequest).send({
         message: "Project owner is mismatch",
@@ -294,20 +320,21 @@ router.post("/invite/accept", async (req, res) => {
       .doc(invitationId)
       .get();
     let uid = req.user.uid;
+    let invitedUser = await getInvitation.data()["to"];
     if (getInvitation.exists) {
       // delete the invitation in project
       await admin
         .firestore()
         .collection("projects")
         .doc(pid)
-        .collection("invitaion")
+        .collection("invitation")
         .doc(invitationId)
         .delete();
       // delete the invitation of user
       await admin
         .firestore()
         .collection("users")
-        .doc(uid)
+        .doc(invitedUser)
         .collection("invitation")
         .doc(invitationId)
         .delete();
@@ -316,12 +343,12 @@ router.post("/invite/accept", async (req, res) => {
         .collection("projects")
         .doc(pid)
         .update({
-          collaborators: FieldValue.arrayUnion(uid),
+          collaborators: FieldValue.arrayUnion(invitedUser),
         });
       await admin
         .firestore()
         .collection("users")
-        .doc(uid)
+        .doc(invitedUser)
         .update({
           collaborated: FieldValue.arrayUnion(pid),
         });
@@ -350,11 +377,7 @@ router.get("/collaborators", async (req, res) => {
       });
       return;
     }
-    let getCollaborators = await admin
-      .firestore()
-      .collection("projects")
-      .doc(pid)
-      .get("collaborators");
+    let getCollaborators = (await admin.firestore().collection("projects").doc(pid).get()).data().collaborators;
     res.status(statusCode.OK).send({
       collaborators: getCollaborators,
     });
@@ -370,20 +393,22 @@ router.get("/collaborators", async (req, res) => {
 @api {DELETE} /v1/projects/collaborators Remove a collaborator
 */
 router.delete("/collaborators", async (req, res) => {
-  const { pid } = req.body;
-  let uid = req.user.uid; // Remove another user!!! not the owner
+  const { pid, cid } = req.body;
   try {
-    if (!DataValidation.allNotUndefined(pid)) {
+    if (!DataValidation.allNotUndefined(pid, cid)) {
       res.status(statusCode.NotFound).send({
         message: "Not Found",
       });
+    }
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
     }
     await admin
       .firestore()
       .collection("projects")
       .doc(pid)
       .update({
-        collaborators: FieldValue.arrayRemove(uid),
+        collaborators: FieldValue.arrayRemove(cid),
       });
     res.status(statusCode.OK).send({
       message: "OK",
