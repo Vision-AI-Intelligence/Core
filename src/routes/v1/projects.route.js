@@ -232,6 +232,26 @@ router.post("/invite", async (req, res) => {
     if (!checkProjectPerm(res, pid, req.user.uid)) {
       return;
     }
+    if (from === to) {
+      res.status(statusCode.NotAcceptable).send({
+        message: "Cannot invite yourself"
+      });
+      return;
+    }
+    //check re-invite someone existed???
+    let invitationSnapshot = await admin.firestore().collection("projects").doc(pid).collection("invitation").get();
+    let checkInvitationExisted = invitationSnapshot.docs.map((document) => {
+      if (to === document.data()["to"]) {
+        return true;
+      }
+      return false;
+    });
+    if (checkInvitationExisted.includes(true)) {
+      res.status(statusCode.NotAcceptable).send({
+        message: `${to} has already existed`
+      });
+      return;
+    };
     // B1. Lấy uid của auth user
     // B2. Kiểm tra auth user có quyền mời trên project pid hay không?
     // B3. Mời người dùng khác
