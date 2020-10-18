@@ -193,12 +193,12 @@ router.get("/invite", async (req, res) => {
     }
     let result = [];
     let invitationSnapshot = await admin.firestore().collection("projects").doc(pid).collection("invitation").get();
-    if (invitationSnapshot.empty) {
-      res.status(statusCode.NotFound).send({
-        message: "No invitation yet!"
-      });
-      return;
-    }
+    // if (invitationSnapshot.empty) {
+    //   res.status(statusCode.NotFound).send({
+    //     message: "No invitation yet!"
+    //   });
+    //   return;
+    // }
     let invitationDoc = invitationSnapshot.docs.map((document) => result.push(document.data()));
 
     if (invitationDoc.length != 0) {

@@ -124,4 +124,32 @@ router.get("/info", async (req, res) => {
   res.status(StatusCode.OK).send(info);
 });
 
+/*
+@api {GET} /v1/users/invite Get the invitations of this user
+*/
+router.get("/invite", async (req, res) => {
+  // const { uid } = req.query;
+  try {
+    // if (!DataValidation.allNotUndefined(uid)) {
+    //   res.status(statusCode.NotFound).send({
+    //     message: "Not Found",
+    //   });
+    //   return;
+    // }
+    let result = [];
+    let invitationSnapshot = await admin.firestore().collection("users").doc(req.user.uid).collection("invitation").get();
+    let invitationDocs = await invitationSnapshot.docs.map((i) => {
+      result.push(i.data());
+    });
+    res.status(statusCode.OK).send({
+      invitations: result
+    });
+  } catch (error) {
+    res.status(statusCode.InternalServerError).send({
+      ...error,
+    });
+    console.log("GET -> invite: ", error);
+  }
+
+})
 module.exports = router;
