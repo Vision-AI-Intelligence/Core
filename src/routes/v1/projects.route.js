@@ -177,6 +177,45 @@ router.delete("/", async (req, res) => {
 });
 
 /*
+@api {GET} /v1/projects/invite Get the invitation
+*/
+router.get("/invite", async (req, res) => {
+  const { pid } = req.query;
+  try {
+    if (!DataValidation.allNotUndefined(pid)) {
+      res.status(statusCode.NotFound).send({
+        message: "Not Found",
+      });
+      return;
+    }
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
+    let result = [];
+    let invitationSnapshot = await admin.firestore().collection("projects").doc(pid).collection("invitation").get();
+    if (invitationSnapshot.empty) {
+      res.status(statusCode.NotFound).send({
+        message: "No invitation yet!"
+      });
+      return;
+    }
+    let invitationDoc = invitationSnapshot.docs.map((document) => result.push(document.data()));
+
+    if (invitationDoc.length != 0) {
+      res.status(statusCode.OK).send({
+        result: result
+      })
+    }
+
+  }
+  catch (error) {
+    res.status(statusCode.InternalServerError).send({
+      ...error,
+    });
+    console.log("GET -> invite: ", error);
+  }
+})
+/*
 @api {POST} /v1/projects/invite Create the invitation
 */
 router.post("/invite", async (req, res) => {
@@ -370,12 +409,15 @@ router.post("/invite/accept", async (req, res) => {
 */
 router.get("/collaborators", async (req, res) => {
   // User permission
-  const { pid } = req.body;
+  const { pid } = req.query;
   try {
     if (!DataValidation.allNotUndefined(pid)) {
       res.status(statusCode.NotFound).send({
         message: "Not Found",
       });
+      return;
+    }
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
       return;
     }
     let getCollaborators = (await admin.firestore().collection("projects").doc(pid).get()).data().collaborators;
