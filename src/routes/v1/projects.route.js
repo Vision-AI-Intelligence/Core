@@ -305,14 +305,14 @@ router.delete("/invite", async (req, res) => {
       return;
     }
 
-    let projectDoc = admin.firestore().collection("projects").doc(pid);
-    const ownerId = (await projectDoc.get()).data()["ownerId"];
-    if (ownerId !== req.user.uid) {
-      res.status(StatusCode.Forbidden).send({
-        message: `Project [${pid}]: Permission Denied`,
-      });
-      return;
-    }
+    // let projectDoc = admin.firestore().collection("projects").doc(pid);
+    // const ownerId = (await projectDoc.get()).data()["ownerId"];
+    // if (ownerId !== req.user.uid) {
+    //   res.status(StatusCode.Forbidden).send({
+    //     message: `Project [${pid}]: Permission Denied`,
+    //   });
+    //   return;
+    // }
 
     let invitationDoc = admin
       .firestore()
@@ -322,12 +322,12 @@ router.delete("/invite", async (req, res) => {
       .doc(invitationId);
 
     const { from, to } = (await invitationDoc.get()).data();
-    if (ownerId !== from) {
-      res.status(StatusCode.BadRequest).send({
-        message: "Project owner is mismatch",
-      });
-      return;
-    }
+    // if (ownerId !== from) {
+    //   res.status(StatusCode.BadRequest).send({
+    //     message: "Project owner is mismatch",
+    //   });
+    //   return;
+    // }
 
     await admin
       .firestore()
@@ -359,7 +359,7 @@ router.delete("/invite", async (req, res) => {
 @api {POST} /v1/projects/invite/accept Accept the invitation
 */
 router.post("/invite/accept", async (req, res) => {
-  const { pid, invitationId } = req.query;
+  const { pid, invitationId } = req.body;
   // Get the invitation data from its id
 
   // Remember to put the collaborator data into collaborator collection
