@@ -8,6 +8,22 @@ const StatusCode = require("../../misc/StatusCode");
 const FieldValue = admin.firestore.FieldValue;
 router.use(authorization);
 
+
+async function checkProjectPerm(res, pid, uid) {
+  let projectDoc = admin.firestore().collection("projects").doc(pid);
+  let projectData = (await projectDoc.get()).data();
+  if (projectData["ownerId"] != uid) {
+    if (!projectData["collaborators"].includes(uid)) {
+      res.status(statusCode.Forbidden).send({
+        message: "Accessing to project [" + pid + "] does not allow",
+      });
+      return false;
+    }
+  }
+  return true;
+}
+
+
 /*
 @apiName GET 
 @apiDescription Get existed projects of the user
@@ -41,6 +57,9 @@ router.post("/", async (req, res) => {
       res.status(statusCode.NotFound).send({
         message: "Not Found",
       });
+      return;
+    }
+    if (!checkProjectPerm(res, id, req.user.uid)) {
       return;
     }
     let existedProjectDoc = await admin
@@ -85,6 +104,9 @@ router.put("/", async (req, res) => {
       });
       return;
     }
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
     let checkExistedProject = await admin
       .firestore()
       .collection("projects")
@@ -123,6 +145,9 @@ router.delete("/", async (req, res) => {
       });
       return;
     }
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
     let checkPid = await admin
       .firestore()
       .collection("projects")
@@ -134,7 +159,7 @@ router.delete("/", async (req, res) => {
       });
       return;
     }
-    if (!(req.user.uid == checkPid.data["ownerID"])) {
+    if (!(req.user.uid == checkPid.data()["ownerId"])) {
       res.status(statusCode.Unauthorized).send({
         message: "Unauthorized",
       });
@@ -152,12 +177,51 @@ router.delete("/", async (req, res) => {
 });
 
 /*
+@api {GET} /v1/projects/invite Get the invitation
+*/
+router.get("/invite", async (req, res) => {
+  const { pid } = req.query;
+  try {
+    if (!DataValidation.allNotUndefined(pid)) {
+      res.status(statusCode.NotFound).send({
+        message: "Not Found",
+      });
+      return;
+    }
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
+    let result = [];
+    let invitationSnapshot = await admin.firestore().collection("projects").doc(pid).collection("invitation").get();
+    // if (invitationSnapshot.empty) {
+    //   res.status(statusCode.NotFound).send({
+    //     message: "No invitation yet!"
+    //   });
+    //   return;
+    // }
+    let invitationDoc = invitationSnapshot.docs.map((document) => result.push(document.data()));
+
+    if (invitationDoc.length != 0) {
+      res.status(statusCode.OK).send({
+        result: result
+      })
+    }
+
+  }
+  catch (error) {
+    res.status(statusCode.InternalServerError).send({
+      ...error,
+    });
+    console.log("GET -> invite: ", error);
+  }
+})
+/*
 @api {POST} /v1/projects/invite Create the invitation
 */
 router.post("/invite", async (req, res) => {
   // WTF: from what !!!
   // big bug !!!
-  const { pid, to } = req.query;
+  const { pid, from, to } = req.body;
   try {
     if (!DataValidation.allNotUndefined(pid, from, to)) {
       res.status(statusCode.NotFound).send({
@@ -165,6 +229,29 @@ router.post("/invite", async (req, res) => {
       });
       return;
     }
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
+    if (from === to) {
+      res.status(statusCode.NotAcceptable).send({
+        message: "Cannot invite yourself"
+      });
+      return;
+    }
+    //check re-invite someone existed???
+    let invitationSnapshot = await admin.firestore().collection("projects").doc(pid).collection("invitation").get();
+    let checkInvitationExisted = invitationSnapshot.docs.map((document) => {
+      if (to === document.data()["to"]) {
+        return true;
+      }
+      return false;
+    });
+    if (checkInvitationExisted.includes(true)) {
+      res.status(statusCode.NotAcceptable).send({
+        message: `${to} has already existed`
+      });
+      return;
+    };
     // B1. Lấy uid của auth user
     // B2. Kiểm tra auth user có quyền mời trên project pid hay không?
     // B3. Mời người dùng khác
@@ -175,7 +262,7 @@ router.post("/invite", async (req, res) => {
       });
       return;
     }
-    let invitationId = Date.now();
+    let invitationId = Date.now().toString();
     const message = {
       from: req.user.uid,
       to: to,
@@ -218,15 +305,14 @@ router.delete("/invite", async (req, res) => {
       return;
     }
 
-    let projectDoc = admin.firestore().collection("projects").doc(pid);
-    const ownerId = (await projectDoc.get()).data();
-
-    if (ownerId !== req.user.uid) {
-      res.status(StatusCode.Forbidden).send({
-        message: `Project [${pid}]: Permission Denied`,
-      });
-      return;
-    }
+    // let projectDoc = admin.firestore().collection("projects").doc(pid);
+    // const ownerId = (await projectDoc.get()).data()["ownerId"];
+    // if (ownerId !== req.user.uid) {
+    //   res.status(StatusCode.Forbidden).send({
+    //     message: `Project [${pid}]: Permission Denied`,
+    //   });
+    //   return;
+    // }
 
     let invitationDoc = admin
       .firestore()
@@ -236,13 +322,12 @@ router.delete("/invite", async (req, res) => {
       .doc(invitationId);
 
     const { from, to } = (await invitationDoc.get()).data();
-
-    if (ownerId !== from) {
-      res.status(StatusCode.BadRequest).send({
-        message: "Project owner is mismatch",
-      });
-      return;
-    }
+    // if (ownerId !== from) {
+    //   res.status(StatusCode.BadRequest).send({
+    //     message: "Project owner is mismatch",
+    //   });
+    //   return;
+    // }
 
     await admin
       .firestore()
@@ -274,7 +359,7 @@ router.delete("/invite", async (req, res) => {
 @api {POST} /v1/projects/invite/accept Accept the invitation
 */
 router.post("/invite/accept", async (req, res) => {
-  const { pid, invitationId } = req.query;
+  const { pid, invitationId } = req.body;
   // Get the invitation data from its id
 
   // Remember to put the collaborator data into collaborator collection
@@ -293,21 +378,23 @@ router.post("/invite/accept", async (req, res) => {
       .collection("invitation")
       .doc(invitationId)
       .get();
+    console.log(await getInvitation.data());
     let uid = req.user.uid;
+    let invitedUser = await getInvitation.data()["to"];
     if (getInvitation.exists) {
       // delete the invitation in project
       await admin
         .firestore()
         .collection("projects")
         .doc(pid)
-        .collection("invitaion")
+        .collection("invitation")
         .doc(invitationId)
         .delete();
       // delete the invitation of user
       await admin
         .firestore()
         .collection("users")
-        .doc(uid)
+        .doc(invitedUser)
         .collection("invitation")
         .doc(invitationId)
         .delete();
@@ -316,12 +403,12 @@ router.post("/invite/accept", async (req, res) => {
         .collection("projects")
         .doc(pid)
         .update({
-          collaborators: FieldValue.arrayUnion(uid),
+          collaborators: FieldValue.arrayUnion(getInvitation.data()["to"]),
         });
       await admin
         .firestore()
         .collection("users")
-        .doc(uid)
+        .doc(getInvitation.data()["to"])
         .update({
           collaborated: FieldValue.arrayUnion(pid),
         });
@@ -342,7 +429,7 @@ router.post("/invite/accept", async (req, res) => {
 */
 router.get("/collaborators", async (req, res) => {
   // User permission
-  const { pid } = req.body;
+  const { pid } = req.query;
   try {
     if (!DataValidation.allNotUndefined(pid)) {
       res.status(statusCode.NotFound).send({
@@ -350,11 +437,10 @@ router.get("/collaborators", async (req, res) => {
       });
       return;
     }
-    let getCollaborators = await admin
-      .firestore()
-      .collection("projects")
-      .doc(pid)
-      .get("collaborators");
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
+    let getCollaborators = (await admin.firestore().collection("projects").doc(pid).get()).data().collaborators;
     res.status(statusCode.OK).send({
       collaborators: getCollaborators,
     });
@@ -370,20 +456,30 @@ router.get("/collaborators", async (req, res) => {
 @api {DELETE} /v1/projects/collaborators Remove a collaborator
 */
 router.delete("/collaborators", async (req, res) => {
-  const { pid } = req.body;
-  let uid = req.user.uid; // Remove another user!!! not the owner
+  const { pid, cid } = req.query;
   try {
-    if (!DataValidation.allNotUndefined(pid)) {
+    if (!DataValidation.allNotUndefined(pid, cid)) {
       res.status(statusCode.NotFound).send({
         message: "Not Found",
       });
+    }
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
     }
     await admin
       .firestore()
       .collection("projects")
       .doc(pid)
       .update({
-        collaborators: FieldValue.arrayRemove(uid),
+        collaborators: FieldValue.arrayRemove(cid),
+      });
+    // delete collaborated of user
+    await admin
+      .firestore()
+      .collection("users")
+      .doc(cid)
+      .update({
+        collaborated: FieldValue.arrayRemove(pid),
       });
     res.status(statusCode.OK).send({
       message: "OK",

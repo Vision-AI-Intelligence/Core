@@ -11,16 +11,16 @@ router.use(authorization);
 /*
 @api {GET} /v1/users Get the user info
 */
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
   let uid = req.user.uid;
   try {
-    if (DataValidation.allNotUndefined(uid)) {
+    if (!DataValidation.allNotUndefined(uid)) {
       res.status(statusCode.NotFound).send({
-        message: "Not Found",
+        message: "[" + uid + "] Not Found",
       });
       return;
     }
-    let getUser = admin.firestore().collection("users").doc(uid).get();
+    let getUser = await (await admin.firestore().collection("users").doc(uid).get()).data();
     res.status(statusCode.OK).send({
       user: getUser,
     });
@@ -67,25 +67,44 @@ router.post("/", async (req, res) => {
 @api {GET} /v1/users/listing Search the users by their info
 */
 router.get("/listing", async (req, res) => {
-  const { keyword } = req.body;
+  const { keyword } = req.query;
+  // console.log(keyword);
   try {
     if (!DataValidation.allNotUndefined(keyword)) {
       res.status(statusCode.NotFound).send({
         message: [],
       });
     }
-    let query = (await admin.auth().getUsers()).users;
+    // let query = (await admin.auth().getUsers()).users;
+    let query = (((await admin.auth().listUsers()).users));
     let result = [];
     for (let i = 0; i < query.length; i++) {
-      let index = similarity(keyword, query[i]["email"], { sensitive: true });
-      if (index > 0.6) {
+      let nameTokens = query[i].displayName.trim().split(' ');
+      let index = Math.max(similarity(keyword, query[i].email, { sensitive: false }), similarity(keyword, query[i].displayName, { sensitive: false }));
+      for (let nameToken of nameTokens) {
+        index = Math.max(index, similarity(keyword, nameToken, { sensitive: false }));
+      }
+      if (index > 0.4) {
         result.push({
+          si: index,
           uid: query[i].uid,
           email: query[i].email,
+          displayName: query[i].displayName,
           photoURL: query[i].photoURL,
         });
       }
+      // result.push({ email: query[i].email });
     }
+    result = result.sort((a, b) => {
+      if (a.si > b.si) {
+        return -1;
+      }
+      if (b.si > a.si) {
+        return 1;
+      }
+      return 0;
+    })
+    console.log(result);
     res.status(statusCode.OK).send({
       result: result,
     });
@@ -102,7 +121,35 @@ router.get("/listing", async (req, res) => {
 router.get("/info", async (req, res) => {
   const { uid } = req.query;
   let info = await admin.auth().getUser(uid);
-  res.send(StatusCode.OK).send(info);
+  res.status(StatusCode.OK).send(info);
 });
 
+/*
+@api {GET} /v1/users/invite Get the invitations of this user
+*/
+router.get("/invite", async (req, res) => {
+  // const { uid } = req.query;
+  try {
+    // if (!DataValidation.allNotUndefined(uid)) {
+    //   res.status(statusCode.NotFound).send({
+    //     message: "Not Found",
+    //   });
+    //   return;
+    // }
+    let result = [];
+    let invitationSnapshot = await admin.firestore().collection("users").doc(req.user.uid).collection("invitation").get();
+    let invitationDocs = await invitationSnapshot.docs.map((i) => {
+      result.push(i.data());
+    });
+    res.status(statusCode.OK).send({
+      invitations: result
+    });
+  } catch (error) {
+    res.status(statusCode.InternalServerError).send({
+      ...error,
+    });
+    console.log("GET -> invite: ", error);
+  }
+
+})
 module.exports = router;
