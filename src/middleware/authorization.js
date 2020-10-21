@@ -31,7 +31,7 @@ const authorization = async function (req, res, next) {
   }
   try {
     let decodedId = await admin.auth().verifyIdToken(authorization);
-    req.user = decodedId;
+    req.user = { ...decodedId };
     next();
   } catch (e) {
     res.status(statusCode.Unauthorized).send({
