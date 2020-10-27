@@ -71,13 +71,21 @@ router.get("/list", async (req, res) => {
       res.status(statusCode.NotFound).send({
         message: "Not Found",
       });
+      return;
     }
     if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
+    console.log(pid);
+    let projectData = (await admin.firestore().collection('projects').doc(pid).get()).data();
+    if (projectData.buckets === undefined || projectData.buckets.length == 0) {
+      res.status(statusCode.NotFound).send({ message: 'Do not have any buckets!!!' });
       return;
     }
     res.status(statusCode.OK).send({
       buckets: projectData["buckets"],
     });
+    return;
   } catch (error) {
     res.status(statusCode.InternalServerError).send({
       ...error,

@@ -12,6 +12,9 @@ router.use(authorization);
 async function checkProjectPerm(res, pid, uid) {
   let projectDoc = admin.firestore().collection("projects").doc(pid);
   let projectData = (await projectDoc.get()).data();
+  if (projectData === undefined) {
+    return false;
+  }
   if (projectData["ownerId"] != uid) {
     if (!projectData["collaborators"].includes(uid)) {
       res.status(statusCode.Forbidden).send({
@@ -46,7 +49,40 @@ router.get("/", async (req, res) => {
     });
   }
 });
-
+/*
+@apiName GET 
+@apiDescription Get accepted projects of the user
+@apiVersion  1.0.0
+*/
+router.get("/accept", async (req, res) => {
+  try {
+    let projectCollaborated = await (await admin.firestore().collection("users").doc(req.user.uid).get()).data()["collaborated"];
+    let projects = [];
+    if (projectCollaborated == undefined || projectCollaborated.length == 0 || projectCollaborated == null) {
+      res.status(statusCode.NotFound).send({
+        message: "Do not have any projects here!!!"
+      });
+      return;
+    }
+    for (const i of projectCollaborated) {
+      let projectDoc = (await admin.firestore().collection("projects").doc(i).get()).data();
+      projects.push({
+        id: projectDoc.id,
+        name: projectDoc.name,
+        description: projectDoc.description,
+        ownerId: projectDoc.ownerId
+      });
+    }
+    // console.log(projectCollaborated);
+    res.status(statusCode.OK).send({
+      projects: projects,
+    });
+  } catch (e) {
+    res.status(statusCode.InternalServerError).send({
+      ...e,
+    });
+  }
+});
 /*
 @api {POST} /v1/projects Create new project
  */
@@ -83,6 +119,7 @@ router.post("/", async (req, res) => {
     res.status(statusCode.Created).send({
       message: "OK",
     });
+    return;
   } catch (error) {
     res.status(statusCode.InternalServerError).send({
       ...error,
@@ -123,7 +160,7 @@ router.put("/", async (req, res) => {
       description: description,
     });
     res.status(statusCode.OK).send({
-      message: "Update OK",
+      message: "OK",
     });
   } catch (error) {
     res.status(statusCode.InternalServerError).send({
@@ -163,11 +200,49 @@ router.delete("/", async (req, res) => {
       res.status(statusCode.Unauthorized).send({
         message: "Unauthorized",
       });
+      return;
     }
+    // check exist of invitation
+    let invitationSnapshot = await admin.firestore().collection("projects").doc(pid).collection("invitation").get();
+    let iId = [];
+
+    // if not empty => delete document in this user's invitation then delete all document in project's invitation
+    if (!invitationSnapshot.empty) {
+      invitationSnapshot.docs.map((document) => {
+        iId.push({
+          id: document.data().id,
+          to: document.data().to
+        });
+      });
+      for (const i of iId) {
+        await admin.firestore().collection("users").doc(i.to).collection("invitation").doc(i.id).delete();
+      }
+      invitationSnapshot.docs.forEach(async doc => await doc.ref.delete()); // delete all document in invitation
+      await admin.firestore().collection("projects").doc(pid).delete();
+      res.status(statusCode.OK).send({
+        message: 'OK'
+      });
+      return;
+    }
+
+    // delete project + user if have collaborators
+    console.log(checkPid.data()['collaborators']);
+    let collaborators = checkPid.data()['collaborators'];
+    if (!(collaborators === undefined || collaborators === null)) {
+      for (const c of collaborators) {
+        console.log(collaborators);
+        await admin.firestore().collection("users").doc(c).update({
+          collaborated: FieldValue.arrayRemove(pid),
+        });
+
+      }
+    }
+    // delete all field in this project
     await admin.firestore().collection("projects").doc(pid).delete();
     res.status(statusCode.OK).send({
-      message: "Delete OK",
+      message: "OK",
     });
+    return;
   } catch (error) {
     res.status(statusCode.InternalServerError).send({
       ...error,
