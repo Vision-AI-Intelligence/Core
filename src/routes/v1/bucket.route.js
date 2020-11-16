@@ -290,7 +290,7 @@ router.post("/upload", uploadFile.single("file"), async (req, res) => {
  * @apiParam  {String} dir Directory name
  * @apiParam  {String} d Current directory. Default is root /
  */
-router.put("/mkdir", async (req, res) => {
+router.post("/mkdir", async (req, res) => {
   const { pid, bid, dir, d } = req.body;
   if (!DataValidation.allNotUndefined(pid, bid, dir, d)) {
     res.status(statusCode.NotFound).send({

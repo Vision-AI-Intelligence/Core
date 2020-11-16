@@ -77,6 +77,7 @@ router.get("/accept", async (req, res) => {
     res.status(statusCode.OK).send({
       projects: projects,
     });
+    return;
   } catch (e) {
     res.status(statusCode.InternalServerError).send({
       ...e,
