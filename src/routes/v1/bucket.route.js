@@ -11,8 +11,12 @@ const path = require("path");
 const getFolderSize = require("get-folder-size");
 const StatusCode = require("../../misc/StatusCode");
 const multer = require("multer");
+const config = require("../../config");
+const axios = require("axios");
 
 router.use(authorization);
+
+const defaultRunnerEndpoint = `${config.defaultRunner.host}:${config.defaultRunner.port}`;
 
 const storage = multer.diskStorage({
   destination: (req, res, callback) => {
@@ -77,9 +81,13 @@ router.get("/list", async (req, res) => {
       return;
     }
     console.log(pid);
-    let projectData = (await admin.firestore().collection('projects').doc(pid).get()).data();
+    let projectData = (
+      await admin.firestore().collection("projects").doc(pid).get()
+    ).data();
     if (projectData.buckets === undefined || projectData.buckets.length == 0) {
-      res.status(statusCode.NotFound).send({ message: 'Do not have any buckets!!!' });
+      res
+        .status(statusCode.NotFound)
+        .send({ message: "Do not have any buckets!!!" });
       return;
     }
     res.status(statusCode.OK).send({
@@ -666,6 +674,94 @@ router.put("/download-job", async (req, res) => {
     });
     console.log("PUT -> download-job ", error);
   }
+});
+
+router.get("/runner/io/walk", async (req, res) => {
+  const { pid, dir } = req.query;
+  res.redirect(
+    `${defaultRunnerEndpoint}/io/project/${pid}/walk?dir=${dir}`,
+    302
+  );
+});
+
+router.post("/runner/io", async (req, res) => {
+  const { pid } = req.query;
+  res.redirect(`${defaultRunnerEndpoint}/io/project/${pid}`, 302);
+});
+
+router.delete("/runner/io", async (req, res) => {
+  const { pid } = req.query;
+  res.redirect(`${defaultRunnerEndpoint}/io/project/${pid}`, 302);
+});
+
+router.post("/runner/io/data", uploadFile, async (req, res) => {
+  const { pid } = req.query;
+  res.redirect(`${defaultRunnerEndpoint}/io/project/${pid}/data`, 302);
+});
+
+router.post("/runner/download", async (req, res) => {
+  const { pid } = req.query;
+  job = await axios.default.post(
+    `${defaultRunnerEndpoint}/io/project/${pid}/download`,
+    req.body
+  );
+  if (job.status == 200) {
+    await admin
+      .firestore()
+      .collection("projects")
+      .doc(pid)
+      .collection("jobs")
+      .doc(job.jobId)
+      .set({ id: job.jobId });
+    res.send({ message: "Downloading" });
+    return;
+  }
+  res.status(401).send({ message: "Download error" });
+});
+
+router.post("/runner/zip", async (req, res) => {
+  const { pid } = req.query;
+  job = await axios.default.post(
+    `${defaultRunnerEndpoint}/io/project/${pid}/zip`,
+    req.body
+  );
+  if (job.status == 200) {
+    await admin
+      .firestore()
+      .collection("projects")
+      .doc(pid)
+      .collection("jobs")
+      .doc(job.jobId)
+      .set({ id: job.jobId });
+    res.send({ message: "Zip" });
+    return;
+  }
+  res.status(401).send({ message: "Zip error" });
+});
+
+router.post("/runner/unzip", async (req, res) => {
+  const { pid } = req.query;
+  job = await axios.default.post(
+    `${defaultRunnerEndpoint}/io/project/${pid}/unzip`,
+    req.body
+  );
+  if (job.status == 200) {
+    await admin
+      .firestore()
+      .collection("projects")
+      .doc(pid)
+      .collection("jobs")
+      .doc(job.jobId)
+      .set({ id: job.jobId });
+    res.send({ message: "Unzip" });
+    return;
+  }
+  res.status(401).send({ message: "Unzip error" });
+});
+
+router.delete("/runner/rm", async (req, res) => {
+  const { pid } = req.query;
+  res.redirect(`${defaultRunnerEndpoint}/io/project/${pid}/rm`, 302);
 });
 
 module.exports = router;

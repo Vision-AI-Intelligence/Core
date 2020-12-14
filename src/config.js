@@ -8,4 +8,8 @@ module.exports = {
   redisSecret: "4t6PN9SJrXcN2ZLR47cnzG93wCLZa2W7",
   bucketSite: "./buckets",
   bucketTemp: "./tmp",
+  defaultRunner: {
+    host: "http://127.0.0.1",
+    port: "8088",
+  },
 };
