@@ -703,13 +703,17 @@ router.delete("/runner/io", async (req, res) => {
   res.redirect(`${defaultRunnerEndpoint}/io/project/${pid}`, 302);
 });
 
-router.post("/runner/io/data", uploadFile, async (req, res) => {
-  const { pid } = req.query;
-  if (!checkProjectPerm(res, pid, req.user.uid)) {
-    return;
+router.post(
+  "/runner/io/data",
+  uploadFile.single("upload_file"),
+  async (req, res) => {
+    const { pid } = req.query;
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
+    res.redirect(`${defaultRunnerEndpoint}/io/project/${pid}/data`, 302);
   }
-  res.redirect(`${defaultRunnerEndpoint}/io/project/${pid}/data`, 302);
-});
+);
 
 router.post("/runner/download", async (req, res) => {
   const { pid } = req.query;
