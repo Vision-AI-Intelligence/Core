@@ -678,6 +678,9 @@ router.put("/download-job", async (req, res) => {
 
 router.get("/runner/io/walk", async (req, res) => {
   const { pid, dir } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
   res.redirect(
     `${defaultRunnerEndpoint}/io/project/${pid}/walk?dir=${dir}`,
     302
@@ -686,21 +689,33 @@ router.get("/runner/io/walk", async (req, res) => {
 
 router.post("/runner/io", async (req, res) => {
   const { pid } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
   res.redirect(`${defaultRunnerEndpoint}/io/project/${pid}`, 302);
 });
 
 router.delete("/runner/io", async (req, res) => {
   const { pid } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
   res.redirect(`${defaultRunnerEndpoint}/io/project/${pid}`, 302);
 });
 
 router.post("/runner/io/data", uploadFile, async (req, res) => {
   const { pid } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
   res.redirect(`${defaultRunnerEndpoint}/io/project/${pid}/data`, 302);
 });
 
 router.post("/runner/download", async (req, res) => {
   const { pid } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
   job = await axios.default.post(
     `${defaultRunnerEndpoint}/io/project/${pid}/download`,
     req.body
@@ -721,6 +736,9 @@ router.post("/runner/download", async (req, res) => {
 
 router.post("/runner/zip", async (req, res) => {
   const { pid } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
   job = await axios.default.post(
     `${defaultRunnerEndpoint}/io/project/${pid}/zip`,
     req.body
@@ -741,6 +759,9 @@ router.post("/runner/zip", async (req, res) => {
 
 router.post("/runner/unzip", async (req, res) => {
   const { pid } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
   job = await axios.default.post(
     `${defaultRunnerEndpoint}/io/project/${pid}/unzip`,
     req.body
@@ -761,6 +782,9 @@ router.post("/runner/unzip", async (req, res) => {
 
 router.delete("/runner/rm", async (req, res) => {
   const { pid } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
   res.redirect(`${defaultRunnerEndpoint}/io/project/${pid}/rm`, 302);
 });
 

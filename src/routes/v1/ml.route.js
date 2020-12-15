@@ -28,54 +28,47 @@ async function checkProjectPerm(res, pid, uid) {
   return true;
 }
 
-router.use(checkProjectPerm);
+//router.use(checkProjectPerm);
 
-router.get("/", async (req, res) => {
+const defaultRunnerEndpoint = `${config.defaultRunner.host}:${config.defaultRunner.port}`;
+
+router.get("/models", async (req, res) => {
   const { pid } = req.query;
   if (!checkProjectPerm(res, pid, req.user.uid)) {
     return;
   }
-  let jobs = (
+  res.redirect(`${defaultRunnerEndpoint}/${pid}`, 302);
+});
+
+router.post("/gen_tfrecord", async (req, res) => {
+  const { pid } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
+  job = await axios.default.post(
+    `${defaultRunnerEndpoint}/ml/gen_tfrecord/${pid}`,
+    req.body
+  );
+  if (job.status == 200) {
     await admin
       .firestore()
       .collection("projects")
       .doc(pid)
       .collection("jobs")
-      .get()
-  ).docs;
-  res.status(200).send({
-    jobs: jobs.map((job) => job.data()),
-  });
+      .doc(job.jobId)
+      .set({ id: job.jobId });
+    res.send({ message: "Generate TF Record" });
+    return;
+  }
+  res.status(401).send({ message: "Generate TF Record error" });
 });
 
-router.post("/revoke", async (req, res) => {
-  const { jobId } = req.query;
-  let response = await axios.default.post(
-    `${config.defaultRunner.host}:${config.defaultRunner.port}/jobs/revoke/${jobId}`
-  );
-  res.status(response.status).send({
-    ...response.data,
-  });
-});
-
-router.delete("/", async (req, res) => {
-  const { pid, jobId } = req.query;
+router.post("/download_pretrained_model", async (req, res) => {
+  const { pid } = req.query;
   if (!checkProjectPerm(res, pid, req.user.uid)) {
     return;
   }
-  await axios.default.post(
-    `${config.defaultRunner.host}:${config.defaultRunner.port}/jobs/revoke/${jobId}`
-  );
-  await admin
-    .firestore()
-    .collection("projects")
-    .doc(pid)
-    .collection("jobs")
-    .doc(jobId)
-    .delete();
-  res.status(200).send({
-    message: `Deleted ${jobId}`,
-  });
+  res.redirect(`${defaultRunnerEndpoint}/ml/download_pretrained_model/${pid}`);
 });
 
 module.exports = router;
