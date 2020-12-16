@@ -29,15 +29,15 @@ async function checkProjectPerm(res, pid, uid) {
   return true;
 }
 
-router.use(checkProjectPerm);
-
 router.get("/", async (req, res) => {
   const { jobId } = req.query;
-  if (!checkProjectPerm(res, pid, req.user.uid)) {
-    return;
-  }
+  // if (!checkProjectPerm(res, pid, req.user.uid)) {
+  //   return;
+  // }
   let data = await new Promise((resolve, reject) => {
     RedisApp.app.HGETALL(jobId, (err, reply) => {
+      console.log(err);
+      console.log(reply);
       if (err) {
         reject(err);
         return;

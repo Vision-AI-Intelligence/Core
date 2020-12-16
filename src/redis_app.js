@@ -7,7 +7,7 @@ class RedisApp {
    */
   static app = redis.createClient({
     host: config.redisHost,
-    port: config.port,
+    port: config.redisPort,
     auth_pass: config.redisSecret,
   });
 }
