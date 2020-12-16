@@ -1,6 +1,6 @@
 module.exports = {
   port: 8081,
-  host: "0.0.0.0",
+  host: "127.0.0.1",
   log: "log.txt",
   bypass: true,
   redisHost: "103.57.220.118",
@@ -10,6 +10,6 @@ module.exports = {
   bucketTemp: "./tmp",
   defaultRunner: {
     host: "http://127.0.0.1",
-    port: "8088",
+    port: 8088,
   },
 };

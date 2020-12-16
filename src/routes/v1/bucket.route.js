@@ -682,8 +682,8 @@ router.get("/runner/io/walk", async (req, res) => {
     return;
   }
   res.redirect(
-    `${defaultRunnerEndpoint}/io/project/${pid}/walk?dir=${dir}`,
-    302
+    302,
+    `${defaultRunnerEndpoint}/io/project/${pid}/walk?dir=${dir}`
   );
 });
 
@@ -692,7 +692,7 @@ router.post("/runner/io", async (req, res) => {
   if (!checkProjectPerm(res, pid, req.user.uid)) {
     return;
   }
-  res.redirect(`${defaultRunnerEndpoint}/io/project/${pid}`, 302);
+  res.redirect(307, `${defaultRunnerEndpoint}/io/project/${pid}`);
 });
 
 router.delete("/runner/io", async (req, res) => {
@@ -700,7 +700,7 @@ router.delete("/runner/io", async (req, res) => {
   if (!checkProjectPerm(res, pid, req.user.uid)) {
     return;
   }
-  res.redirect(`${defaultRunnerEndpoint}/io/project/${pid}`, 302);
+  res.redirect(302, `${defaultRunnerEndpoint}/io/project/${pid}`);
 });
 
 router.post(
@@ -724,14 +724,15 @@ router.post("/runner/download", async (req, res) => {
     `${defaultRunnerEndpoint}/io/project/${pid}/download`,
     req.body
   );
+  console.log(job);
   if (job.status == 200) {
     await admin
       .firestore()
       .collection("projects")
       .doc(pid)
-      .collection("jobs")
-      .doc(job.jobId)
-      .set({ id: job.jobId });
+      .collection("jobs-io")
+      .doc(job.data.jobId)
+      .set({ id: job.data.jobId });
     res.send({ message: "Downloading" });
     return;
   }
@@ -752,9 +753,9 @@ router.post("/runner/zip", async (req, res) => {
       .firestore()
       .collection("projects")
       .doc(pid)
-      .collection("jobs")
-      .doc(job.jobId)
-      .set({ id: job.jobId });
+      .collection("jobs-io")
+      .doc(job.data.jobId)
+      .set({ id: job.data.jobId });
     res.send({ message: "Zip" });
     return;
   }
@@ -775,9 +776,9 @@ router.post("/runner/unzip", async (req, res) => {
       .firestore()
       .collection("projects")
       .doc(pid)
-      .collection("jobs")
-      .doc(job.jobId)
-      .set({ id: job.jobId });
+      .collection("jobs-io")
+      .doc(job.data.jobId)
+      .set({ id: job.data.jobId });
     res.send({ message: "Unzip" });
     return;
   }
@@ -785,11 +786,14 @@ router.post("/runner/unzip", async (req, res) => {
 });
 
 router.delete("/runner/rm", async (req, res) => {
-  const { pid } = req.query;
+  const { pid, file } = req.query;
   if (!checkProjectPerm(res, pid, req.user.uid)) {
     return;
   }
-  res.redirect(`${defaultRunnerEndpoint}/io/project/${pid}/rm`, 302);
+  res.redirect(
+    `${defaultRunnerEndpoint}/io/project/${pid}/rm?file=${file}`,
+    302
+  );
 });
 
 module.exports = router;

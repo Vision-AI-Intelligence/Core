@@ -8,6 +8,7 @@ const StatusCode = require("../../misc/StatusCode");
 const config = require("../../config");
 const FieldValue = admin.firestore.FieldValue;
 const axios = require("axios");
+const RedisApp = require("../../redis_app");
 
 router.use(authorization);
 
@@ -31,20 +32,22 @@ async function checkProjectPerm(res, pid, uid) {
 router.use(checkProjectPerm);
 
 router.get("/", async (req, res) => {
-  const { pid } = req.query;
+  const { jobId } = req.query;
   if (!checkProjectPerm(res, pid, req.user.uid)) {
     return;
   }
-  let jobs = (
-    await admin
-      .firestore()
-      .collection("projects")
-      .doc(pid)
-      .collection("jobs")
-      .get()
-  ).docs;
+  let data = await new Promise((resolve, reject) => {
+    RedisApp.app.HGETALL(jobId, (err, reply) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(reply);
+    });
+  });
+
   res.status(200).send({
-    jobs: jobs.map((job) => job.data()),
+    state: data,
   });
 });
 
@@ -59,7 +62,7 @@ router.post("/revoke", async (req, res) => {
 });
 
 router.delete("/", async (req, res) => {
-  const { pid, jobId } = req.query;
+  const { pid, jobId, type } = req.query;
   if (!checkProjectPerm(res, pid, req.user.uid)) {
     return;
   }
@@ -70,7 +73,7 @@ router.delete("/", async (req, res) => {
     .firestore()
     .collection("projects")
     .doc(pid)
-    .collection("jobs")
+    .collection(`jobs-${type}`)
     .doc(jobId)
     .delete();
   res.status(200).send({

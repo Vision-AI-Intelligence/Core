@@ -8,7 +8,6 @@ const StatusCode = require("../../misc/StatusCode");
 const FieldValue = admin.firestore.FieldValue;
 router.use(authorization);
 
-
 async function checkProjectPerm(res, pid, uid) {
   let projectDoc = admin.firestore().collection("projects").doc(pid);
   let projectData = (await projectDoc.get()).data();
@@ -25,7 +24,6 @@ async function checkProjectPerm(res, pid, uid) {
   }
   return true;
 }
-
 
 /*
 @apiName GET 
@@ -56,21 +54,29 @@ router.get("/", async (req, res) => {
 */
 router.get("/accept", async (req, res) => {
   try {
-    let projectCollaborated = await (await admin.firestore().collection("users").doc(req.user.uid).get()).data()["collaborated"];
+    let projectCollaborated = await (
+      await admin.firestore().collection("users").doc(req.user.uid).get()
+    ).data()["collaborated"];
     let projects = [];
-    if (projectCollaborated == undefined || projectCollaborated.length == 0 || projectCollaborated == null) {
+    if (
+      projectCollaborated == undefined ||
+      projectCollaborated.length == 0 ||
+      projectCollaborated == null
+    ) {
       res.status(statusCode.NotFound).send({
-        message: "Do not have any projects here!!!"
+        message: "Do not have any projects here!!!",
       });
       return;
     }
     for (const i of projectCollaborated) {
-      let projectDoc = (await admin.firestore().collection("projects").doc(i).get()).data();
+      let projectDoc = (
+        await admin.firestore().collection("projects").doc(i).get()
+      ).data();
       projects.push({
         id: projectDoc.id,
         name: projectDoc.name,
         description: projectDoc.description,
-        ownerId: projectDoc.ownerId
+        ownerId: projectDoc.ownerId,
       });
     }
     // console.log(projectCollaborated);
@@ -204,7 +210,12 @@ router.delete("/", async (req, res) => {
       return;
     }
     // check exist of invitation
-    let invitationSnapshot = await admin.firestore().collection("projects").doc(pid).collection("invitation").get();
+    let invitationSnapshot = await admin
+      .firestore()
+      .collection("projects")
+      .doc(pid)
+      .collection("invitation")
+      .get();
     let iId = [];
 
     // if not empty => delete document in this user's invitation then delete all document in project's invitation
@@ -212,30 +223,39 @@ router.delete("/", async (req, res) => {
       invitationSnapshot.docs.map((document) => {
         iId.push({
           id: document.data().id,
-          to: document.data().to
+          to: document.data().to,
         });
       });
       for (const i of iId) {
-        await admin.firestore().collection("users").doc(i.to).collection("invitation").doc(i.id).delete();
+        await admin
+          .firestore()
+          .collection("users")
+          .doc(i.to)
+          .collection("invitation")
+          .doc(i.id)
+          .delete();
       }
-      invitationSnapshot.docs.forEach(async doc => await doc.ref.delete()); // delete all document in invitation
+      invitationSnapshot.docs.forEach(async (doc) => await doc.ref.delete()); // delete all document in invitation
       await admin.firestore().collection("projects").doc(pid).delete();
       res.status(statusCode.OK).send({
-        message: 'OK'
+        message: "OK",
       });
       return;
     }
 
     // delete project + user if have collaborators
-    console.log(checkPid.data()['collaborators']);
-    let collaborators = checkPid.data()['collaborators'];
+    console.log(checkPid.data()["collaborators"]);
+    let collaborators = checkPid.data()["collaborators"];
     if (!(collaborators === undefined || collaborators === null)) {
       for (const c of collaborators) {
         console.log(collaborators);
-        await admin.firestore().collection("users").doc(c).update({
-          collaborated: FieldValue.arrayRemove(pid),
-        });
-
+        await admin
+          .firestore()
+          .collection("users")
+          .doc(c)
+          .update({
+            collaborated: FieldValue.arrayRemove(pid),
+          });
       }
     }
     // delete all field in this project
@@ -268,29 +288,34 @@ router.get("/invite", async (req, res) => {
       return;
     }
     let result = [];
-    let invitationSnapshot = await admin.firestore().collection("projects").doc(pid).collection("invitation").get();
+    let invitationSnapshot = await admin
+      .firestore()
+      .collection("projects")
+      .doc(pid)
+      .collection("invitation")
+      .get();
     // if (invitationSnapshot.empty) {
     //   res.status(statusCode.NotFound).send({
     //     message: "No invitation yet!"
     //   });
     //   return;
     // }
-    let invitationDoc = invitationSnapshot.docs.map((document) => result.push(document.data()));
+    let invitationDoc = invitationSnapshot.docs.map((document) =>
+      result.push(document.data())
+    );
 
     if (invitationDoc.length != 0) {
       res.status(statusCode.OK).send({
-        result: result
-      })
+        result: result,
+      });
     }
-
-  }
-  catch (error) {
+  } catch (error) {
     res.status(statusCode.InternalServerError).send({
       ...error,
     });
     console.log("GET -> invite: ", error);
   }
-})
+});
 /*
 @api {POST} /v1/projects/invite Create the invitation
 */
@@ -310,12 +335,17 @@ router.post("/invite", async (req, res) => {
     }
     if (from === to) {
       res.status(statusCode.NotAcceptable).send({
-        message: "Cannot invite yourself"
+        message: "Cannot invite yourself",
       });
       return;
     }
     //check re-invite someone existed???
-    let invitationSnapshot = await admin.firestore().collection("projects").doc(pid).collection("invitation").get();
+    let invitationSnapshot = await admin
+      .firestore()
+      .collection("projects")
+      .doc(pid)
+      .collection("invitation")
+      .get();
     let checkInvitationExisted = invitationSnapshot.docs.map((document) => {
       if (to === document.data()["to"]) {
         return true;
@@ -324,10 +354,10 @@ router.post("/invite", async (req, res) => {
     });
     if (checkInvitationExisted.includes(true)) {
       res.status(statusCode.NotAcceptable).send({
-        message: `${to} has already existed`
+        message: `${to} has already existed`,
       });
       return;
-    };
+    }
     // B1. Lấy uid của auth user
     // B2. Kiểm tra auth user có quyền mời trên project pid hay không?
     // B3. Mời người dùng khác
@@ -516,7 +546,9 @@ router.get("/collaborators", async (req, res) => {
     if (!checkProjectPerm(res, pid, req.user.uid)) {
       return;
     }
-    let getCollaborators = (await admin.firestore().collection("projects").doc(pid).get()).data().collaborators;
+    let getCollaborators = (
+      await admin.firestore().collection("projects").doc(pid).get()
+    ).data().collaborators;
     res.status(statusCode.OK).send({
       collaborators: getCollaborators,
     });
