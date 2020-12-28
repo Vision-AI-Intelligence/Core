@@ -796,4 +796,15 @@ router.delete("/runner/rm", async (req, res) => {
   );
 });
 
+router.get("/runner/download", async (req, res) => {
+  const { pid, dir } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
+  res.redirect(
+    307,
+    `${defaultRunnerEndpoint}/io/project/${pid}/download?dir=${dir}`
+  );
+});
+
 module.exports = router;
