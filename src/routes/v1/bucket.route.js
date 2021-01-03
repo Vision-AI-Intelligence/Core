@@ -11,8 +11,12 @@ const path = require("path");
 const getFolderSize = require("get-folder-size");
 const StatusCode = require("../../misc/StatusCode");
 const multer = require("multer");
+const config = require("../../config");
+const axios = require("axios");
 
 router.use(authorization);
+
+const defaultRunnerEndpoint = `${config.defaultRunner.host}:${config.defaultRunner.port}`;
 
 const storage = multer.diskStorage({
   destination: (req, res, callback) => {
@@ -71,13 +75,25 @@ router.get("/list", async (req, res) => {
       res.status(statusCode.NotFound).send({
         message: "Not Found",
       });
+      return;
     }
     if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
+    console.log(pid);
+    let projectData = (
+      await admin.firestore().collection("projects").doc(pid).get()
+    ).data();
+    if (projectData.buckets === undefined || projectData.buckets.length == 0) {
+      res
+        .status(statusCode.NotFound)
+        .send({ message: "Do not have any buckets!!!" });
       return;
     }
     res.status(statusCode.OK).send({
       buckets: projectData["buckets"],
     });
+    return;
   } catch (error) {
     res.status(statusCode.InternalServerError).send({
       ...error,
@@ -282,7 +298,7 @@ router.post("/upload", uploadFile.single("file"), async (req, res) => {
  * @apiParam  {String} dir Directory name
  * @apiParam  {String} d Current directory. Default is root /
  */
-router.put("/mkdir", async (req, res) => {
+router.post("/mkdir", async (req, res) => {
   const { pid, bid, dir, d } = req.body;
   if (!DataValidation.allNotUndefined(pid, bid, dir, d)) {
     res.status(statusCode.NotFound).send({
@@ -658,6 +674,137 @@ router.put("/download-job", async (req, res) => {
     });
     console.log("PUT -> download-job ", error);
   }
+});
+
+router.get("/runner/io/walk", async (req, res) => {
+  const { pid, dir } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
+  res.redirect(
+    302,
+    `${defaultRunnerEndpoint}/io/project/${pid}/walk?dir=${dir}`
+  );
+});
+
+router.post("/runner/io", async (req, res) => {
+  const { pid } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
+  res.redirect(307, `${defaultRunnerEndpoint}/io/project/${pid}`);
+});
+
+router.delete("/runner/io", async (req, res) => {
+  const { pid } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
+  res.redirect(302, `${defaultRunnerEndpoint}/io/project/${pid}`);
+});
+
+router.post(
+  "/runner/io/data",
+  uploadFile.single("upload_file"),
+  async (req, res) => {
+    const { pid } = req.query;
+    if (!checkProjectPerm(res, pid, req.user.uid)) {
+      return;
+    }
+    res.redirect(`${defaultRunnerEndpoint}/io/project/${pid}/data`, 302);
+  }
+);
+
+router.post("/runner/download", async (req, res) => {
+  const { pid } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
+  job = await axios.default.post(
+    `${defaultRunnerEndpoint}/io/project/${pid}/download`,
+    req.body
+  );
+  console.log(job);
+  if (job.status == 200) {
+    await admin
+      .firestore()
+      .collection("projects")
+      .doc(pid)
+      .collection("jobs-io")
+      .doc(job.data.jobId)
+      .set({ id: job.data.jobId });
+    res.send({ message: "Downloading" });
+    return;
+  }
+  res.status(401).send({ message: "Download error" });
+});
+
+router.post("/runner/zip", async (req, res) => {
+  const { pid } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
+  job = await axios.default.post(
+    `${defaultRunnerEndpoint}/io/project/${pid}/zip`,
+    req.body
+  );
+  if (job.status == 200) {
+    await admin
+      .firestore()
+      .collection("projects")
+      .doc(pid)
+      .collection("jobs-io")
+      .doc(job.data.jobId)
+      .set({ id: job.data.jobId });
+    res.send({ message: "Zip" });
+    return;
+  }
+  res.status(401).send({ message: "Zip error" });
+});
+
+router.post("/runner/unzip", async (req, res) => {
+  const { pid } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
+  job = await axios.default.post(
+    `${defaultRunnerEndpoint}/io/project/${pid}/unzip`,
+    req.body
+  );
+  if (job.status == 200) {
+    await admin
+      .firestore()
+      .collection("projects")
+      .doc(pid)
+      .collection("jobs-io")
+      .doc(job.data.jobId)
+      .set({ id: job.data.jobId });
+    res.send({ message: "Unzip" });
+    return;
+  }
+  res.status(401).send({ message: "Unzip error" });
+});
+
+router.delete("/runner/rm", async (req, res) => {
+  const { pid, file } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
+  res.redirect(
+    `${defaultRunnerEndpoint}/io/project/${pid}/rm?file=${file}`,
+    302
+  );
+});
+
+router.get("/runner/download", async (req, res) => {
+  const { pid, dir } = req.query;
+  if (!checkProjectPerm(res, pid, req.user.uid)) {
+    return;
+  }
+  res.redirect(
+    307,
+    `${defaultRunnerEndpoint}/io/project/${pid}/download?dir=${dir}`
+  );
 });
 
 module.exports = router;

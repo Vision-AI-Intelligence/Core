@@ -2,7 +2,10 @@ const admin = require("firebase-admin");
 const config = require("../config");
 const statusCode = require("../misc/StatusCode");
 const authorization = async function (req, res, next) {
-  const { authorization } = req.headers;
+  let { authorization } = req.headers;
+  if (authorization == undefined) {
+    authorization = req.query.token;
+  }
   let { dummy } = req.body;
   if (authorization === undefined) {
     if (dummy === undefined) {
